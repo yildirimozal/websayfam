@@ -1,32 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
-import mongoose from 'mongoose';
+import { connectToDatabase } from '@/lib/mongodb';
 import Message from '@/models/Message';
-
-// MongoDB bağlantısı
-const connectDB = async () => {
-  if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI is not defined');
-  }
-  
-  try {
-    if (mongoose.connection.readyState === 1) {
-      console.log('Using existing MongoDB connection');
-      return;
-    }
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB bağlantısı başarılı');
-  } catch (error) {
-    console.error('MongoDB bağlantı hatası:', error);
-    throw error;
-  }
-};
 
 // GET - Tüm mesajları getir
 export async function GET(request: Request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     const messages = await Message.find().sort({ createdAt: -1 }).limit(50);
     return NextResponse.json(messages);
   } catch (error) {
@@ -46,7 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    await connectDB();
+    await connectToDatabase();
     const data = await request.json();
 
     const message = await Message.create({
@@ -83,7 +64,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Mesaj ID gerekli' }, { status: 400 });
     }
 
-    await connectDB();
+    await connectToDatabase();
     
     const message = await Message.findOneAndDelete({
       _id: id,
