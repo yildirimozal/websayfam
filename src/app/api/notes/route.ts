@@ -1,32 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
-import mongoose from 'mongoose';
+import { authOptions } from '../auth/config';
+import { connectToDatabase } from '@/lib/mongodb';
 import Note from '@/models/Note';
-
-// MongoDB bağlantısı
-const connectDB = async () => {
-  if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI is not defined');
-  }
-  
-  try {
-    if (mongoose.connection.readyState === 1) {
-      console.log('Using existing MongoDB connection');
-      return;
-    }
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB bağlantısı başarılı');
-  } catch (error) {
-    console.error('MongoDB bağlantı hatası:', error);
-    throw error;
-  }
-};
 
 // GET - Tüm notları getir
 export async function GET(request: Request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     const notes = await Note.find().sort({ createdAt: -1 });
     return NextResponse.json(notes);
   } catch (error) {
@@ -46,7 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    await connectDB();
+    await connectToDatabase();
     const data = await request.json();
 
     const note = await Note.create({
@@ -78,7 +59,7 @@ export async function PUT(request: Request) {
     const data = await request.json();
     const { id, ...updateData } = data;
 
-    await connectDB();
+    await connectToDatabase();
 
     const note = await Note.findOneAndUpdate(
       { _id: id, 'author.email': session.user.email },
@@ -115,7 +96,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Not ID gerekli' }, { status: 400 });
     }
 
-    await connectDB();
+    await connectToDatabase();
     
     const note = await Note.findOneAndDelete({
       _id: id,

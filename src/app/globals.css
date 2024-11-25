@@ -1,3 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '@uiw/react-md-editor/markdown-editor.css';
+@import '@uiw/react-markdown-preview/markdown.css';
+
 :root {
   --background-default: #f5f5f5;
 }
@@ -89,4 +96,29 @@ a {
   bottom: 0;
   right: 0;
   cursor: se-resize;
+}
+
+/* Markdown Editor Dark Mode Overrides */
+[data-color-mode="dark"] {
+  --color-canvas-default: #1a1a1a;
+  --color-canvas-subtle: #2d2d2d;
+  --color-border-default: #404040;
+  --color-border-muted: #404040;
+}
+
+/* Markdown Preview Styles */
+.wmde-markdown {
+  background-color: transparent !important;
+}
+
+.wmde-markdown pre {
+  background-color: var(--color-canvas-subtle) !important;
+  border: 1px solid var(--color-border-default) !important;
+}
+
+.wmde-markdown code {
+  background-color: var(--color-canvas-subtle) !important;
+  border: 1px solid var(--color-border-default) !important;
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
 }
