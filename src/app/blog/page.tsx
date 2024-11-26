@@ -8,10 +8,13 @@ const BlogPageClient = dynamic(() => import('@/components/BlogPageClient'), {
   ssr: true
 });
 
+// Sayfayı dinamik olarak işaretle
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 async function getBlogs() {
-  let db;
   try {
-    db = await connectToDatabase();
+    await connectToDatabase();
     console.log('Veritabanı bağlantısı başarılı');
     
     const session = await getServerSession(authOptions);
