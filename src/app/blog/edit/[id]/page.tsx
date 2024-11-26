@@ -1,12 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useParams } from 'next/navigation';
+import { Box, CircularProgress, Typography, Container } from '@mui/material';
+import { useParams, redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
 import BlogEditor from '@/components/BlogEditor';
 import Hero from '@/components/Hero';
 
-export default function EditBlogPage() {
+export default async function EditBlogPage() {
+  const session = await getServerSession();
+
+  // Admin değilse ana sayfaya yönlendir
+  if (!session?.user?.isAdmin) {
+    redirect('/');
+  }
+
   const params = useParams();
   const [blog, setBlog] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +66,12 @@ export default function EditBlogPage() {
   return (
     <Box>
       <Hero />
-      <BlogEditor initialData={blog} />
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Blog Yazısını Düzenle
+        </Typography>
+        <BlogEditor initialData={blog} />
+      </Container>
     </Box>
   );
 }
