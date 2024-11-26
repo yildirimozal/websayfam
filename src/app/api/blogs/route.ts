@@ -6,8 +6,9 @@ import Blog from '@/models/Blog';
 
 // GET - Tüm blogları veya slug ile tekil blog getir
 export async function GET(request: Request) {
+  let db;
   try {
-    await connectToDatabase();
+    db = await connectToDatabase();
     const session = await getServerSession(authOptions);
     
     const { searchParams } = new URL(request.url);
@@ -42,13 +43,14 @@ export async function GET(request: Request) {
 
 // POST - Yeni blog oluştur (sadece admin)
 export async function POST(request: Request) {
+  let db;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    await connectToDatabase();
+    db = await connectToDatabase();
     const data = await request.json();
 
     const blog = await Blog.create({
@@ -74,6 +76,7 @@ export async function POST(request: Request) {
 
 // PUT - Blog güncelle (sadece admin)
 export async function PUT(request: Request) {
+  let db;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
@@ -88,7 +91,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Blog ID gerekli' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    db = await connectToDatabase();
 
     const blog = await Blog.findByIdAndUpdate(
       blogId,
@@ -118,6 +121,7 @@ export async function PUT(request: Request) {
 
 // DELETE - Blog sil (sadece admin)
 export async function DELETE(request: Request) {
+  let db;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
@@ -131,7 +135,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Blog ID gerekli' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    db = await connectToDatabase();
     
     const blog = await Blog.findByIdAndDelete(id);
     
