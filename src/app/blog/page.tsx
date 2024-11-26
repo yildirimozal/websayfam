@@ -38,8 +38,13 @@ import {
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
+import dynamic from 'next/dynamic';
 import Hero from '@/components/Hero';
+
+const ReactMarkdown = dynamic(() => import('react-markdown'), {
+  ssr: false,
+  loading: () => <CircularProgress size={20} />
+});
 
 interface BlogPost {
   _id: string;
