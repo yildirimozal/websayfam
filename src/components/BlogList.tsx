@@ -130,7 +130,7 @@ export default function BlogList({ blogs, isAdmin }: BlogListProps) {
                   left: 0,
                   right: 0,
                   height: '50px',
-                  background: 'linear-gradient(transparent, white)',
+                  background: `linear-gradient(transparent, ${theme.palette.background.paper})`,
                 }
               }}>
                 <ReactMarkdown>{blog.content}</ReactMarkdown>

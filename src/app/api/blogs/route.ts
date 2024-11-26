@@ -8,21 +8,31 @@ import Blog from '@/models/Blog';
 export async function GET(request: Request) {
   let db;
   try {
+    console.log('Blog API: Veritabanına bağlanılıyor...');
     db = await connectToDatabase();
+    console.log('Blog API: Veritabanı bağlantısı başarılı');
+
     const session = await getServerSession(authOptions);
+    console.log('Blog API: Oturum durumu:', session?.user?.isAdmin ? 'Admin' : 'Normal kullanıcı');
     
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
     const tag = searchParams.get('tag');
+    console.log('Blog API: Arama parametreleri:', { slug, tag });
 
     if (slug) {
+      console.log('Blog API: Slug ile blog aranıyor:', slug);
       const blog = await Blog.findOne({ 
         slug,
         ...(session?.user?.isAdmin ? {} : { published: true })
       });
+      
       if (!blog) {
+        console.log('Blog API: Blog bulunamadı');
         return NextResponse.json({ error: 'Blog bulunamadı' }, { status: 404 });
       }
+      
+      console.log('Blog API: Blog bulundu');
       return NextResponse.json(blog);
     }
 
@@ -30,10 +40,17 @@ export async function GET(request: Request) {
       ? { tags: tag, ...(session?.user?.isAdmin ? {} : { published: true }) }
       : session?.user?.isAdmin ? {} : { published: true };
 
+    console.log('Blog API: Bloglar için sorgu:', query);
     const blogs = await Blog.find(query).sort({ createdAt: -1 });
+    console.log('Blog API: Bulunan blog sayısı:', blogs.length);
+
     return NextResponse.json(blogs);
   } catch (error) {
-    console.error('Blog getirme hatası:', error);
+    console.error('Blog API - Blog getirme hatası:', error);
+    if (error instanceof Error) {
+      console.error('Hata detayı:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
     return NextResponse.json(
       { error: 'Bloglar yüklenirken hata oluştu' },
       { status: 500 }
@@ -45,13 +62,16 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   let db;
   try {
+    console.log('Blog API: Yeni blog oluşturuluyor...');
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
+      console.log('Blog API: Yetkisiz erişim denemesi');
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     db = await connectToDatabase();
     const data = await request.json();
+    console.log('Blog API: Gelen blog verisi:', data);
 
     const blog = await Blog.create({
       ...data,
@@ -61,10 +81,13 @@ export async function POST(request: Request) {
       }
     });
 
+    console.log('Blog API: Blog başarıyla oluşturuldu:', blog._id);
     return NextResponse.json(blog, { status: 201 });
   } catch (error) {
-    console.error('Blog oluşturma hatası:', error);
+    console.error('Blog API - Blog oluşturma hatası:', error);
     if (error instanceof Error) {
+      console.error('Hata detayı:', error.message);
+      console.error('Stack trace:', error.stack);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json(
@@ -78,8 +101,10 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   let db;
   try {
+    console.log('Blog API: Blog güncelleniyor...');
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
+      console.log('Blog API: Yetkisiz erişim denemesi');
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
@@ -88,10 +113,12 @@ export async function PUT(request: Request) {
     const blogId = id || _id;
 
     if (!blogId) {
+      console.log('Blog API: Blog ID eksik');
       return NextResponse.json({ error: 'Blog ID gerekli' }, { status: 400 });
     }
 
     db = await connectToDatabase();
+    console.log('Blog API: Güncellenecek blog ID:', blogId);
 
     const blog = await Blog.findByIdAndUpdate(
       blogId,
@@ -103,13 +130,17 @@ export async function PUT(request: Request) {
     );
 
     if (!blog) {
+      console.log('Blog API: Güncellenecek blog bulunamadı');
       return NextResponse.json({ error: 'Blog bulunamadı' }, { status: 404 });
     }
 
+    console.log('Blog API: Blog başarıyla güncellendi');
     return NextResponse.json(blog);
   } catch (error) {
-    console.error('Blog güncelleme hatası:', error);
+    console.error('Blog API - Blog güncelleme hatası:', error);
     if (error instanceof Error) {
+      console.error('Hata detayı:', error.message);
+      console.error('Stack trace:', error.stack);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json(
@@ -123,8 +154,10 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   let db;
   try {
+    console.log('Blog API: Blog siliniyor...');
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
+      console.log('Blog API: Yetkisiz erişim denemesi');
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
@@ -132,20 +165,28 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id');
 
     if (!id) {
+      console.log('Blog API: Blog ID eksik');
       return NextResponse.json({ error: 'Blog ID gerekli' }, { status: 400 });
     }
 
     db = await connectToDatabase();
+    console.log('Blog API: Silinecek blog ID:', id);
     
     const blog = await Blog.findByIdAndDelete(id);
     
     if (!blog) {
+      console.log('Blog API: Silinecek blog bulunamadı');
       return NextResponse.json({ error: 'Blog bulunamadı' }, { status: 404 });
     }
 
+    console.log('Blog API: Blog başarıyla silindi');
     return NextResponse.json({ message: 'Blog başarıyla silindi' });
   } catch (error) {
-    console.error('Blog silme hatası:', error);
+    console.error('Blog API - Blog silme hatası:', error);
+    if (error instanceof Error) {
+      console.error('Hata detayı:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
     return NextResponse.json(
       { error: 'Blog silinirken hata oluştu' },
       { status: 500 }
