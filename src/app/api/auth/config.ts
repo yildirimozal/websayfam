@@ -26,3 +26,5 @@ export const authOptions: AuthOptions = {
     signIn: '/auth/signin',
   },
 };
+
+export default authOptions;

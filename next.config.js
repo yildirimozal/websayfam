@@ -15,7 +15,31 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverActions: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/translate',
+        destination: 'https://libretranslate.de/translate',
+      },
+    ];
   },
-}
+  // CORS ve güvenlik ayarları
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+        ],
+      },
+    ];
+  },
+  // Port ayarı
+  server: {
+    port: 3001,
+  },
+};
+
+module.exports = nextConfig;

@@ -1,4 +1,3 @@
-// Önceki PublicCorkBoard bileşeninin içeriğini alıp sadece API endpoint'ini değiştireceğim
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, forwardRef } from 'react';
@@ -116,12 +115,15 @@ const PublicCorkBoard: React.FC = () => {
 
     previousNotesRef.current = notesRef.current;
     try {
-      const response = await fetch('/api/public-notes', {
+      const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: noteId,
-          ...note,
+          type: note.type,
+          content: note.content,
+          position: note.position,
+          rotation: note.rotation,
+          size: note.size,
           ...updates
         }),
       });
@@ -270,60 +272,6 @@ const PublicCorkBoard: React.FC = () => {
     await updateNote(noteId, { size: { width: data.size.width, height: data.size.height } });
   }, [session, updateNote]);
 
-  const handleAddNote = useCallback(async () => {
-    if (!editingNote || !session?.user) return;
-
-    const tempId = generateTempId();
-    const newNote = {
-      ...editingNote,
-      id: editingNote.id || tempId,
-      position: { x: 20, y: 20 },
-      rotation: Math.random() * 6 - 3,
-      size: { width: 200, height: 150 },
-      author: {
-        name: session.user.name || '',
-        email: session.user.email || '',
-        image: session.user.image || '',
-      },
-    };
-
-    if (!editingNote.id) {
-      setNotes(prev => [...prev, newNote]);
-    }
-
-    try {
-      const method = editingNote.id ? 'PUT' : 'POST';
-      const response = await fetch('/api/public-notes', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingNote.id ? { id: editingNote.id, ...editingNote } : newNote),
-      });
-
-      if (!response.ok) {
-        throw new Error('Not eklenirken/güncellenirken hata oluştu');
-      }
-
-      const data = await response.json();
-      
-      setNotes(prev => {
-        if (editingNote.id) {
-          return prev.map(n => n.id === editingNote.id ? data : n);
-        } else {
-          return prev.map(n => n.id === tempId ? data : n);
-        }
-      });
-
-      setIsDialogOpen(false);
-      setEditingNote(null);
-    } catch (error) {
-      setError('Not eklenirken/güncellenirken hata oluştu');
-      if (!editingNote.id) {
-        setNotes(prev => prev.filter(n => n.id !== tempId));
-      }
-      console.error('Not eklenirken/güncellenirken hata:', error);
-    }
-  }, [editingNote, session]);
-
   const handleDeleteNote = useCallback(async (noteId: string) => {
     if (!session?.user) return;
 
@@ -331,7 +279,7 @@ const PublicCorkBoard: React.FC = () => {
     if (!note || (note.author?.email !== session.user.email && !session.user.isAdmin)) return;
 
     try {
-      const response = await fetch(`/api/public-notes?id=${noteId}`, {
+      const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'DELETE',
       });
 
@@ -345,6 +293,73 @@ const PublicCorkBoard: React.FC = () => {
       console.error('Not silinirken hata:', error);
     }
   }, [session]);
+
+  const handleAddNote = useCallback(async () => {
+    if (!editingNote || !session?.user) return;
+
+    const tempId = generateTempId();
+    const newNote = {
+      type: editingNote.type,
+      content: editingNote.content,
+      position: { x: 20, y: 20 },
+      rotation: Math.random() * 6 - 3,
+      size: { width: 200, height: 150 },
+      author: {
+        name: session.user.name || '',
+        email: session.user.email || '',
+        image: session.user.image || '',
+      },
+    };
+
+    try {
+      if (editingNote.id) {
+        // Güncelleme işlemi
+        const response = await fetch(`/api/public-notes/${editingNote.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: editingNote.type,
+            content: editingNote.content,
+            position: editingNote.position,
+            rotation: editingNote.rotation,
+            size: editingNote.size,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Not güncellenirken hata oluştu');
+        }
+
+        const updatedNote = await response.json();
+        setNotes(prev => prev.map(n => n.id === editingNote.id ? updatedNote : n));
+      } else {
+        // Yeni not ekleme işlemi
+        setNotes(prev => [...prev, { ...newNote, id: tempId }]);
+
+        const response = await fetch('/api/public-notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newNote),
+        });
+
+        if (!response.ok) {
+          throw new Error('Not eklenirken hata oluştu');
+        }
+
+        const savedNote = await response.json();
+        setNotes(prev => prev.map(n => n.id === tempId ? savedNote : n));
+      }
+
+      setIsDialogOpen(false);
+      setEditingNote(null);
+    } catch (error) {
+      setError('Not eklenirken/güncellenirken hata oluştu');
+      if (!editingNote.id) {
+        setNotes(prev => prev.filter(n => n.id !== tempId));
+      }
+      console.error('Not eklenirken/güncellenirken hata:', error);
+    }
+  }, [editingNote, session]);
 
   return (
     <Box sx={{ height: '100%', position: 'relative' }}>
@@ -464,7 +479,9 @@ const PublicCorkBoard: React.FC = () => {
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteNote(noteId);
+                          if (note.id) {
+                            handleDeleteNote(note.id);
+                          }
                         }}
                         sx={{ 
                           opacity: 0,

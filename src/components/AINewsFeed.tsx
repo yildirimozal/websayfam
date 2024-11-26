@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -8,16 +8,23 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemIcon,
   Chip,
-  styled
+  styled,
+  Link,
+  CircularProgress,
+  Fade,
 } from '@mui/material';
-import { NewReleases, AutoAwesome } from '@mui/icons-material';
+import { NewReleases, Launch } from '@mui/icons-material';
 
 interface NewsItem {
+  _id: string;
   title: string;
-  date: string;
   description: string;
+  url: string;
+  imageUrl: string;
+  publishedAt: string;
+  source: string;
+  createdAt: string;
 }
 
 const StyledListItem = styled(ListItem)(({ theme }) => ({
@@ -27,47 +34,151 @@ const StyledListItem = styled(ListItem)(({ theme }) => ({
   '&:last-child': {
     borderBottom: 'none',
   },
+  position: 'relative',
+  minHeight: '150px',
+  display: 'flex',
+  gap: theme.spacing(2),
+}));
+
+const NewsContent = styled(Box)(({ theme }) => ({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+}));
+
+const NewsImage = styled('img')(({ theme }) => ({
+  width: '150px',
+  height: '100px',
+  borderRadius: theme.shape.borderRadius,
+  objectFit: 'cover',
+  flexShrink: 0,
 }));
 
 const NewsTitle = styled(Typography)({
   fontWeight: 600,
   fontSize: '1rem',
   marginBottom: '4px',
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: '8px',
 });
 
 const NewsDescription = styled(Typography)({
   fontSize: '0.875rem',
   marginBottom: '4px',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
 });
 
 const NewsDate = styled(Typography)({
   fontSize: '0.75rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  marginTop: 'auto',
 });
 
-const newsData: NewsItem[] = [
-  {
-    title: "OpenAI GPT-4V Görsel Yetenekleri Geliştirildi",
-    date: "2024",
-    description: "Yapay zeka modeli artık görselleri daha detaylı analiz edebiliyor."
-  },
-  {
-    title: "Google Gemini Ultra Duyuruldu",
-    date: "2024",
-    description: "Google'ın en gelişmiş yapay zeka modeli kullanıma sunuldu."
-  },
-  {
-    title: "AI Destekli Sağlık Teşhisleri",
-    date: "2024",
-    description: "Yapay zeka, hastalık teşhislerinde %95 doğruluk oranına ulaştı."
-  },
-  {
-    title: "Otonom Araçlarda AI Gelişmeleri",
-    date: "2024",
-    description: "Yeni nesil sürücüsüz araçlar yapay zeka ile daha güvenli."
-  }
-];
+const DISPLAY_COUNT = 3;
+const ROTATION_INTERVAL = 8000; // 8 saniye
+const FADE_DURATION = 1000; // 1 saniye
+const DEFAULT_IMAGE = 'https://via.placeholder.com/300x200?text=AI+News';
 
 const AINewsFeed: React.FC = () => {
+  const [allNews, setAllNews] = useState<NewsItem[]>([]);
+  const [displayedNews, setDisplayedNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fadeStates, setFadeStates] = useState<boolean[]>([true, true, true]);
+
+  // Haberleri karıştır ve yeni 3 haber seç
+  const rotateNews = () => {
+    setFadeStates([false, false, false]);
+    
+    setTimeout(() => {
+      const currentIds = new Set(displayedNews.map(news => news._id));
+      const availableNews = allNews.filter(news => !currentIds.has(news._id));
+      
+      let newDisplayNews;
+      if (availableNews.length >= DISPLAY_COUNT) {
+        newDisplayNews = availableNews
+          .sort(() => Math.random() - 0.5)
+          .slice(0, DISPLAY_COUNT);
+      } else {
+        newDisplayNews = [...allNews]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, DISPLAY_COUNT);
+      }
+      
+      setDisplayedNews(newDisplayNews);
+      setTimeout(() => {
+        setFadeStates([true, true, true]);
+      }, 100);
+    }, FADE_DURATION);
+  };
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('/api/news');
+        if (!response.ok) {
+          throw new Error('Failed to fetch news');
+        }
+        const data = await response.json();
+        setAllNews(data);
+        const initialNews = [...data]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, DISPLAY_COUNT);
+        setDisplayedNews(initialNews);
+        setLoading(false);
+      } catch (err) {
+        setError('Haberler yüklenirken bir hata oluştu');
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
+  useEffect(() => {
+    if (allNews.length > DISPLAY_COUNT) {
+      const interval = setInterval(rotateNews, ROTATION_INTERVAL);
+      return () => clearInterval(interval);
+    }
+  }, [allNews, displayedNews]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = DEFAULT_IMAGE;
+  };
+
+  if (loading) {
+    return (
+      <Card sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress />
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Typography color="error">{error}</Typography>
+      </Card>
+    );
+  }
+
   return (
     <Card 
       sx={{ 
@@ -84,7 +195,6 @@ const AINewsFeed: React.FC = () => {
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AutoAwesome sx={{ mr: 2 }} color="primary" />
             <Typography variant="h5">
               AI Güncel Haberler
             </Typography>
@@ -98,23 +208,36 @@ const AINewsFeed: React.FC = () => {
           />
         </Box>
         <List disablePadding>
-          {newsData.map((news, index) => (
-            <StyledListItem key={index}>
-              <ListItemIcon>
-                <AutoAwesome color="primary" />
-              </ListItemIcon>
-              <Box>
-                <NewsTitle color="primary">
-                  {news.title}
-                </NewsTitle>
-                <NewsDescription color="text.secondary">
-                  {news.description}
-                </NewsDescription>
-                <NewsDate color="text.secondary">
-                  {news.date}
-                </NewsDate>
-              </Box>
-            </StyledListItem>
+          {displayedNews.map((item, index) => (
+            <Fade key={item._id} in={fadeStates[index]} timeout={FADE_DURATION}>
+              <StyledListItem>
+                <NewsContent>
+                  <NewsTitle color="primary">
+                    {item.title}
+                    <Link href={item.url} target="_blank" rel="noopener noreferrer">
+                      <Launch fontSize="small" />
+                    </Link>
+                  </NewsTitle>
+                  <NewsDescription color="text.secondary">
+                    {item.description}
+                  </NewsDescription>
+                  <NewsDate color="text.secondary">
+                    {formatDate(item.publishedAt)}
+                    <Chip
+                      label={item.source}
+                      size="small"
+                      variant="outlined"
+                      sx={{ ml: 1 }}
+                    />
+                  </NewsDate>
+                </NewsContent>
+                <NewsImage
+                  src={item.imageUrl || DEFAULT_IMAGE}
+                  alt={item.title}
+                  onError={handleImageError}
+                />
+              </StyledListItem>
+            </Fade>
           ))}
         </List>
       </CardContent>

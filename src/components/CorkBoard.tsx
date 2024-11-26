@@ -89,14 +89,10 @@ const CorkBoard = () => {
 
     previousNotesRef.current = notesRef.current;
     try {
-      const response = await fetch('/api/private-notes', {
+      const response = await fetch(`/api/private-notes/${noteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: noteId,
-          ...note,
-          ...updates
-        }),
+        body: JSON.stringify(updates),
       });
 
       if (!response.ok) {
@@ -106,7 +102,7 @@ const CorkBoard = () => {
 
       const data = await response.json();
       setNotes(prev => prev.map(n => 
-        n.id === noteId ? data : n
+        n.id === noteId ? { ...n, ...data } : n
       ));
     } catch (error) {
       if (error instanceof Error) {
@@ -180,8 +176,9 @@ const CorkBoard = () => {
 
     try {
       const method = editingNote.id ? 'PUT' : 'POST';
+      const endpoint = editingNote.id ? `/api/private-notes/${editingNote.id}` : '/api/private-notes';
       const body = editingNote.id 
-        ? JSON.stringify({ id: editingNote.id, ...editingNote })
+        ? JSON.stringify(editingNote)
         : JSON.stringify({
             ...editingNote,
             position: { x: 20, y: 20 },
@@ -189,7 +186,7 @@ const CorkBoard = () => {
             size: { width: 200, height: 150 }
           });
 
-      const response = await fetch('/api/private-notes', {
+      const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body,
@@ -217,7 +214,7 @@ const CorkBoard = () => {
     if (!session?.user?.isAdmin) return;
 
     try {
-      const response = await fetch(`/api/private-notes?id=${noteId}`, {
+      const response = await fetch(`/api/private-notes/${noteId}`, {
         method: 'DELETE',
       });
 

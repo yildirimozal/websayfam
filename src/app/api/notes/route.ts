@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/config';
+import { authOptions } from '@/app/api/auth/config';
 import { connectToDatabase } from '@/lib/mongodb';
-import Note from '@/models/Note';
+import { Note } from '@/models/Note';
 
 // GET - Tüm notları getir
 export async function GET(request: Request) {

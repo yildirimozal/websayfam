@@ -1,32 +1,55 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface INote extends Document {
+interface INote {
   content: string;
-  author: {
-    name: string;
-    email: string;
+  position: {
+    x: number;
+    y: number;
   };
+  type: 'text' | 'image' | 'video';
+  url?: string;
+  rotation: number;
+  color: string;
   createdAt: Date;
-  updatedAt: Date;
+  userId: string;
 }
 
-const NoteSchema = new Schema({
+const noteSchema = new Schema<INote>({
   content: {
     type: String,
-    required: [true, 'Not içeriği gerekli'],
+    required: true
   },
-  author: {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-    },
+  position: {
+    x: { type: Number, required: true },
+    y: { type: Number, required: true }
   },
-}, {
-  timestamps: true,
+  type: {
+    type: String,
+    enum: ['text', 'image', 'video'],
+    required: true
+  },
+  url: {
+    type: String,
+    required: function(this: INote) {
+      return this.type === 'image' || this.type === 'video';
+    }
+  },
+  rotation: {
+    type: Number,
+    default: 0
+  },
+  color: {
+    type: String,
+    default: 'yellow'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  userId: {
+    type: String,
+    required: true
+  }
 });
 
-export default mongoose.models.Note || mongoose.model<INote>('Note', NoteSchema);
+export const Note = mongoose.models.Note || mongoose.model<INote>('Note', noteSchema);
