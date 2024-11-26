@@ -36,10 +36,6 @@ const nextConfig = {
       },
     ];
   },
-  // Port ayarı
-  server: {
-    port: 3001,
-  },
 };
 
 module.exports = nextConfig;
