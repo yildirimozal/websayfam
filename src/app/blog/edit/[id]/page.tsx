@@ -3,24 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import { Box, CircularProgress, Typography, Container } from '@mui/material';
 import { useParams, redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
+import { useSession } from 'next-auth/react';
 import BlogEditor from '@/components/BlogEditor';
 import Hero from '@/components/Hero';
 
-export default async function EditBlogPage() {
-  const session = await getServerSession();
-
-  // Admin değilse ana sayfaya yönlendir
-  if (!session?.user?.isAdmin) {
-    redirect('/');
-  }
-
+export default function EditBlogPage() {
+  const { data: session } = useSession();
   const params = useParams();
   const [blog, setBlog] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Admin değilse ana sayfaya yönlendir
+    if (!session?.user?.isAdmin) {
+      redirect('/');
+    }
+
     const fetchBlog = async () => {
       try {
         const response = await fetch(`/api/blogs/${params.id}`);
@@ -43,23 +42,29 @@ export default async function EditBlogPage() {
     if (params.id) {
       fetchBlog();
     }
-  }, [params.id]);
+  }, [params.id, session]);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <CircularProgress />
-      </Box>
+      <>
+        <Hero />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      </>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="error">
-          {error}
-        </Typography>
-      </Box>
+      <>
+        <Hero />
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="error">
+            {error}
+          </Typography>
+        </Box>
+      </>
     );
   }
 

@@ -1,14 +1,13 @@
-'use client';
-
 import React from 'react';
 import { Box, Typography, Container } from '@mui/material';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import BlogEditor from '@/components/BlogEditor';
 import Hero from '@/components/Hero';
+import { authOptions } from '@/app/api/auth/config';
 
 export default async function CreateBlogPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   // Admin değilse ana sayfaya yönlendir
   if (!session?.user?.isAdmin) {

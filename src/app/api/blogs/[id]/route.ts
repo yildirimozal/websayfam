@@ -4,6 +4,20 @@ import { authOptions } from '../../auth/config';
 import { connectToDatabase } from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 
+// Slug oluşturma fonksiyonu
+function createSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9\sğüşıöç]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -39,18 +53,36 @@ export async function PATCH(
     const { id } = params;
     const data = await request.json();
 
-    // Önce blogu bul
-    const blog = await Blog.findById(id);
+    // Başlık değiştiyse yeni slug oluştur
+    if (data.title) {
+      let baseSlug = createSlug(data.title);
+      let slug = baseSlug;
+      let counter = 1;
 
-    if (!blog) {
-      return new NextResponse('Blog bulunamadı', { status: 404 });
+      while (true) {
+        const existingBlog = await Blog.findOne({ 
+          slug,
+          _id: { $ne: id }
+        });
+        if (!existingBlog) {
+          break;
+        }
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      data.slug = slug;
     }
 
-    // Gelen verileri blog nesnesine aktar
-    Object.assign(blog, data);
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      id,
+      { ...data, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
 
-    // Blogu kaydet (bu pre-save hook'unu tetikleyecek)
-    const updatedBlog = await blog.save();
+    if (!updatedBlog) {
+      return new NextResponse('Blog bulunamadı', { status: 404 });
+    }
 
     return NextResponse.json(updatedBlog);
   } catch (error) {

@@ -4,6 +4,20 @@ import { authOptions } from '../auth/config';
 import { connectToDatabase } from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 
+// Slug oluşturma fonksiyonu
+function createSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9\sğüşıöç]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+}
+
 // GET - Tüm blogları veya slug ile tekil blog getir
 export async function GET(request: Request) {
   let db;
@@ -73,8 +87,24 @@ export async function POST(request: Request) {
     const data = await request.json();
     console.log('Blog API: Gelen blog verisi:', data);
 
+    // Başlangıç slug'ını oluştur
+    let baseSlug = createSlug(data.title);
+    let slug = baseSlug;
+    let counter = 1;
+
+    // Benzersiz slug oluştur
+    while (true) {
+      const existingBlog = await Blog.findOne({ slug });
+      if (!existingBlog) {
+        break;
+      }
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
     const blog = await Blog.create({
       ...data,
+      slug,
       author: {
         name: session.user.name || 'Admin',
         email: session.user.email || 'admin@example.com'
@@ -119,6 +149,27 @@ export async function PUT(request: Request) {
 
     db = await connectToDatabase();
     console.log('Blog API: Güncellenecek blog ID:', blogId);
+
+    // Başlık değiştiyse yeni slug oluştur
+    if (updateData.title) {
+      let baseSlug = createSlug(updateData.title);
+      let slug = baseSlug;
+      let counter = 1;
+
+      while (true) {
+        const existingBlog = await Blog.findOne({ 
+          slug,
+          _id: { $ne: blogId }
+        });
+        if (!existingBlog) {
+          break;
+        }
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      updateData.slug = slug;
+    }
 
     const blog = await Blog.findByIdAndUpdate(
       blogId,

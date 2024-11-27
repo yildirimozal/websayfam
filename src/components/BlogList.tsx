@@ -16,7 +16,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const ReactMarkdown = dynamic(() => import('react-markdown'), {
@@ -44,6 +44,7 @@ interface BlogListProps {
 
 export default function BlogList({ blogs, isAdmin }: BlogListProps) {
   const theme = useTheme();
+  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState<string | null>(null);
 
@@ -59,8 +60,7 @@ export default function BlogList({ blogs, isAdmin }: BlogListProps) {
         throw new Error('Blog silinirken hata oluştu');
       }
 
-      // Sayfayı yenile
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error('Blog silme hatası:', error);
     } finally {
@@ -97,15 +97,14 @@ export default function BlogList({ blogs, isAdmin }: BlogListProps) {
                   )}
                 </Typography>
                 {isAdmin && (
-                  <Link href={`/blog/edit/${blog._id}`} passHref>
-                    <Button
-                      startIcon={<EditIcon />}
-                      size="small"
-                      color="primary"
-                    >
-                      Düzenle
-                    </Button>
-                  </Link>
+                  <Button
+                    startIcon={<EditIcon />}
+                    size="small"
+                    color="primary"
+                    onClick={() => router.push(`/blog/edit/${blog._id}`)}
+                  >
+                    Düzenle
+                  </Button>
                 )}
               </Box>
               <Box sx={{ mb: 2 }}>
@@ -139,11 +138,13 @@ export default function BlogList({ blogs, isAdmin }: BlogListProps) {
                 <Typography variant="caption" color="text.secondary">
                   {new Date(blog.createdAt).toLocaleDateString('tr-TR')} - {blog.author.name}
                 </Typography>
-                <Link href={`/blog/${blog.slug}`} passHref>
-                  <Button size="small" color="primary">
-                    Devamını Oku
-                  </Button>
-                </Link>
+                <Button 
+                  size="small" 
+                  color="primary"
+                  onClick={() => router.push(`/blog/${blog.slug}`)}
+                >
+                  Devamını Oku
+                </Button>
               </Box>
             </CardContent>
           </Card>
