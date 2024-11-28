@@ -70,14 +70,14 @@ export default function Home() {
           </Box>
         </Box>
 
-        {/* Publications Section */}
-        <Box sx={{ mb: { xs: 4, md: 8 } }}>
-          <Publications />
-        </Box>
-
         {/* Courses Section */}
         <Box sx={{ mb: { xs: 4, md: 8 } }}>
           <Courses />
+        </Box>
+
+        {/* Publications Section */}
+        <Box sx={{ mb: { xs: 4, md: 8 } }}>
+          <Publications />
         </Box>
       </Container>
     </Box>
