@@ -7,6 +7,7 @@ import Publications from '../components/Publications';
 import Courses from '../components/Courses';
 import Blog from '../components/Blog';
 import CorkBoard from '../components/CorkBoard';
+import YouTubePlaylist from '../components/YouTubePlaylist';
 
 export default function Home() {
   const theme = useTheme();
@@ -48,9 +49,25 @@ export default function Home() {
           </Box>
         </Box>
 
-        {/* Blog Section */}
+        {/* Blog and YouTube Section */}
         <Box sx={{ mb: { xs: 4, md: 8 } }}>
-          <Blog />
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gap: 3,
+              gridTemplateColumns: { 
+                xs: '1fr',
+                md: '7fr 5fr'
+              }
+            }}
+          >
+            <Box>
+              <Blog />
+            </Box>
+            <Box>
+              <YouTubePlaylist />
+            </Box>
+          </Box>
         </Box>
 
         {/* Publications Section */}
