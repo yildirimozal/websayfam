@@ -1,60 +1,106 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-const PrivateNoteSchema = new mongoose.Schema({
-  type: {
+interface IComment {
+  userId: string;
+  content: string;
+  createdAt: Date;
+}
+
+export interface IPrivateNote {
+  _id?: string;
+  content: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  type: 'note' | 'image' | 'video';
+  url?: string;
+  rotation: number;
+  color: string;
+  createdAt: Date;
+  userId: string;
+  likes: string[];
+  comments: IComment[];
+  size?: {
+    width: number;
+    height: number;
+  };
+}
+
+const commentSchema = new Schema<IComment>({
+  userId: {
     type: String,
-    enum: ['note', 'image'],
     required: true
   },
   content: {
     type: String,
     required: true
   },
-  userEmail: {
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const privateNoteSchema = new Schema<IPrivateNote>({
+  content: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   position: {
     x: { type: Number, required: true },
     y: { type: Number, required: true }
   },
-  size: {
-    width: { type: Number, default: 200 },
-    height: { type: Number, default: 150 }
+  type: {
+    type: String,
+    enum: ['note', 'image', 'video'],
+    required: true
+  },
+  url: {
+    type: String,
+    required: function(this: IPrivateNote) {
+      return this.type === 'image' || this.type === 'video';
+    }
   },
   rotation: {
     type: Number,
     default: 0
   },
+  color: {
+    type: String,
+    default: 'yellow'
+  },
   createdAt: {
     type: Date,
     default: Date.now
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  userId: {
+    type: String,
+    required: true
+  },
+  likes: [{
+    type: String,
+    ref: 'User'
+  }],
+  comments: [commentSchema],
+  size: {
+    width: { type: Number },
+    height: { type: Number }
   }
-}, {
-  timestamps: true,
-  toJSON: {
-    transform: function(doc, ret) {
-      ret.id = ret._id.toString();
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  }
 });
 
-PrivateNoteSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
+// Beğeni sayısını hesaplayan virtual alan
+privateNoteSchema.virtual('likeCount').get(function() {
+  return this.likes?.length || 0;
 });
 
-PrivateNoteSchema.pre('findOneAndUpdate', function(next) {
-  this.set({ updatedAt: new Date() });
-  next();
+// Yorum sayısını hesaplayan virtual alan
+privateNoteSchema.virtual('commentCount').get(function() {
+  return this.comments?.length || 0;
 });
 
-export default mongoose.models.PrivateNote || mongoose.model('PrivateNote', PrivateNoteSchema);
+// JSON dönüşümünde virtual alanları dahil et
+privateNoteSchema.set('toJSON', { virtuals: true });
+privateNoteSchema.set('toObject', { virtuals: true });
+
+export const PrivateNote = mongoose.models.PrivateNote || mongoose.model<IPrivateNote>('PrivateNote', privateNoteSchema);

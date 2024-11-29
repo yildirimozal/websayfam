@@ -1,45 +1,53 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/config';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import PrivateNote from '@/models/PrivateNote';
+import { PrivateNote, IPrivateNote } from '@/models/PrivateNote';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/config';
 
-// GET - Tüm notları getir (herkes okuyabilir)
-export async function GET(request: Request) {
+export async function GET() {
   try {
     await connectToDatabase();
-    const notes = await PrivateNote.find().sort({ createdAt: -1 });
+    const notes = await PrivateNote.find()
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec() as IPrivateNote[];
+
     return NextResponse.json(notes);
   } catch (error) {
-    console.error('Notlar yüklenirken hata:', error);
+    console.error('Notlar getirilirken hata:', error);
     return NextResponse.json(
-      { error: 'Notlar yüklenirken hata oluştu' },
+      { error: 'Notlar getirilirken bir hata oluştu' },
       { status: 500 }
     );
   }
 }
 
-// POST - Yeni not oluştur (sadece admin)
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Bu işlem için yetkiniz yok' },
+        { status: 403 }
+      );
     }
 
-    await connectToDatabase();
     const data = await request.json();
+    await connectToDatabase();
 
-    const note = await PrivateNote.create({
+    const note = new PrivateNote({
       ...data,
-      userEmail: session.user.email
+      userId: session.user.id,
+      likes: [],
+      comments: []
     });
 
-    return NextResponse.json(note, { status: 201 });
+    await note.save();
+    return NextResponse.json(note);
   } catch (error) {
-    console.error('Not oluşturma hatası:', error);
+    console.error('Not eklenirken hata:', error);
     return NextResponse.json(
-      { error: 'Not oluşturulurken hata oluştu' },
+      { error: 'Not eklenirken bir hata oluştu' },
       { status: 500 }
     );
   }

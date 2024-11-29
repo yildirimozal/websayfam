@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
-  Grid, 
   Card, 
   CardContent, 
   Chip, 
@@ -20,15 +19,17 @@ import {
   InputLabel,
   useTheme,
   CircularProgress,
+  Stack,
+  Grid,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
+  Tooltip,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Divider
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import { 
   Add as AddIcon, 
@@ -38,7 +39,11 @@ import {
   Upload as UploadIcon,
   Description as DescriptionIcon,
   Image as ImageIcon,
-  VideoLibrary as VideoIcon
+  VideoLibrary as VideoIcon,
+  School as SchoolIcon,
+  AccessTime as AccessTimeIcon,
+  Category as CategoryIcon,
+  Business as BusinessIcon
 } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
 
@@ -81,6 +86,8 @@ export default function Courses() {
   const [weekTitle, setWeekTitle] = useState('');
   const [weekDescription, setWeekDescription] = useState('');
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -180,7 +187,6 @@ export default function Courses() {
 
       const { url, type } = await response.json();
 
-      // Dosyayı haftalık içeriğe ekle
       const course = courses.find(c => c._id === courseId);
       if (!course) return;
 
@@ -204,7 +210,6 @@ export default function Courses() {
         });
       }
 
-      // Kursu güncelle
       const updateResponse = await fetch(`/api/courses/${courseId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -245,30 +250,56 @@ export default function Courses() {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: 500 
-        }}
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Typography color="error" align="center">
+          {error}
+        </Typography>
       </Box>
     );
   }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Dersler
+      <Typography 
+        variant="h4" 
+        component="h2" 
+        gutterBottom
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mb: 4,
+          color: theme.palette.primary.main,
+          fontWeight: 600,
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: -8,
+            left: 0,
+            width: '60px',
+            height: '4px',
+            backgroundColor: theme.palette.primary.main,
+            borderRadius: '2px'
+          }
+        }}
+      >
+        <SchoolIcon /> Dersler
       </Typography>
 
       {session?.user?.isAdmin && (
         <Button 
           startIcon={<AddIcon />} 
           variant="contained" 
-          sx={{ mb: 2 }}
+          sx={{ mb: 4 }}
           onClick={() => {
             setEditingCourse({
               title: '',
@@ -293,22 +324,83 @@ export default function Courses() {
           <Grid item xs={12} sm={6} md={4} key={course._id}>
             <Card 
               sx={{ 
-                height: '100%', 
-                display: 'flex', 
-                flexDirection: 'column',
-                transition: 'transform 0.2s',
+                height: '100%',
+                transition: 'all 0.3s ease',
                 '&:hover': {
-                  transform: 'scale(1.02)'
-                }
+                  transform: 'translateY(-4px)',
+                  boxShadow: theme.shadows[8],
+                },
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative'
               }}
             >
               <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" component="div">
-                    {course.code} - {course.title}
-                  </Typography>
+                <Typography 
+                  variant="h6" 
+                  component="h3" 
+                  gutterBottom
+                  sx={{ 
+                    fontWeight: 500,
+                    mb: 2,
+                    color: theme.palette.primary.main
+                  }}
+                >
+                  {course.code} - {course.title}
+                </Typography>
+
+                <Typography 
+                  color="text.secondary" 
+                  sx={{ 
+                    mb: 2,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    minHeight: '4.5em'
+                  }}
+                >
+                  {course.description}
+                </Typography>
+
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccessTimeIcon fontSize="small" color="primary" />
+                    <Typography variant="body2">
+                      {course.semester} {course.year}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <BusinessIcon fontSize="small" color="primary" />
+                    <Typography variant="body2">
+                      {course.department}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CategoryIcon fontSize="small" color="primary" />
+                    <Typography variant="body2">
+                      {course.type} • {course.ects} ECTS
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      setSelectedCourse(course);
+                      setDetailsDialogOpen(true);
+                    }}
+                    fullWidth
+                  >
+                    Detaylar
+                  </Button>
                   {session?.user?.isAdmin && (
-                    <Box>
+                    <>
                       <Button
                         size="small"
                         onClick={() => {
@@ -327,84 +419,94 @@ export default function Courses() {
                       >
                         Sil
                       </Button>
-                    </Box>
+                    </>
                   )}
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {course.description}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                  <Chip 
-                    label={`${course.semester} ${course.year}`} 
-                    size="small" 
-                    color="primary" 
-                  />
-                  <Chip 
-                    label={course.type} 
-                    size="small" 
-                    color={course.type === 'Zorunlu' ? 'error' : 'success'} 
-                  />
-                </Box>
-                <Typography variant="body2">
-                  Bölüm: {course.department}
-                </Typography>
-                <Typography variant="body2">
-                  ECTS: {course.ects}
-                </Typography>
-
-                {/* Haftalık İçerikler */}
-                {course.weeklyContents.map((content) => (
-                  <Accordion key={content.week}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography>Hafta {content.week}: {content.title}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Typography variant="body2" paragraph>
-                        {content.description}
-                      </Typography>
-                      <List>
-                        {content.resources.map((resource, index) => (
-                          <ListItem key={index}>
-                            <ListItemText
-                              primary={resource.title}
-                              secondary={
-                                <Button
-                                  href={resource.url}
-                                  target="_blank"
-                                  startIcon={getResourceIcon(resource.type)}
-                                  size="small"
-                                >
-                                  Görüntüle
-                                </Button>
-                              }
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-
-                {session?.user?.isAdmin && (
-                  <Box sx={{ mt: 2 }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<AddIcon />}
-                      onClick={() => {
-                        setEditingCourse(course);
-                        setContentDialogOpen(true);
-                      }}
-                      fullWidth
-                    >
-                      Haftalık İçerik Ekle
-                    </Button>
-                  </Box>
-                )}
+                </Stack>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
+
+      {/* Ders Detay Dialog */}
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={() => {
+          setDetailsDialogOpen(false);
+          setSelectedCourse(null);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {selectedCourse?.code} - {selectedCourse?.title}
+        </DialogTitle>
+        <DialogContent>
+          <Typography paragraph>
+            {selectedCourse?.description}
+          </Typography>
+          
+          <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            Haftalık İçerikler
+          </Typography>
+          
+          {selectedCourse?.weeklyContents.map((content) => (
+            <Accordion key={content.week}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Hafta {content.week}: {content.title}</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography variant="body2" paragraph>
+                  {content.description}
+                </Typography>
+                <List>
+                  {content.resources.map((resource, index) => (
+                    <ListItem key={index}>
+                      <ListItemText
+                        primary={resource.title}
+                        secondary={
+                          <Button
+                            href={resource.url}
+                            target="_blank"
+                            startIcon={getResourceIcon(resource.type)}
+                            size="small"
+                          >
+                            Görüntüle
+                          </Button>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+
+          {session?.user?.isAdmin && selectedCourse && (
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={() => {
+                  setEditingCourse(selectedCourse);
+                  setContentDialogOpen(true);
+                }}
+                fullWidth
+              >
+                Haftalık İçerik Ekle
+              </Button>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setDetailsDialogOpen(false);
+            setSelectedCourse(null);
+          }}>
+            Kapat
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Ders Ekleme/Düzenleme Dialog */}
       <Dialog 
@@ -420,88 +522,72 @@ export default function Courses() {
           {editingCourse?._id ? 'Dersi Düzenle' : 'Yeni Ders Ekle'}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Ders Başlığı"
-            fullWidth
-            value={editingCourse?.title || ''}
-            onChange={(e) => setEditingCourse(prev => prev ? { ...prev, title: e.target.value } : null)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Açıklama"
-            fullWidth
-            multiline
-            rows={3}
-            value={editingCourse?.description || ''}
-            onChange={(e) => setEditingCourse(prev => prev ? { ...prev, description: e.target.value } : null)}
-            sx={{ mb: 2 }}
-          />
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>Dönem</InputLabel>
-                <Select
-                  value={editingCourse?.semester || 'Güz'}
-                  label="Dönem"
-                  onChange={(e) => setEditingCourse(prev => prev ? { ...prev, semester: e.target.value as 'Güz' | 'Bahar' | 'Yaz' } : null)}
-                >
-                  <MenuItem value="Güz">Güz</MenuItem>
-                  <MenuItem value="Bahar">Bahar</MenuItem>
-                  <MenuItem value="Yaz">Yaz</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Yıl"
-                type="number"
-                fullWidth
-                value={editingCourse?.year || new Date().getFullYear()}
-                onChange={(e) => setEditingCourse(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
-              />
-            </Grid>
-          </Grid>
-          <TextField
-            margin="dense"
-            label="Bölüm"
-            fullWidth
-            value={editingCourse?.department || ''}
-            onChange={(e) => setEditingCourse(prev => prev ? { ...prev, department: e.target.value } : null)}
-            sx={{ mb: 2 }}
-          />
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                label="Ders Kodu"
-                fullWidth
-                value={editingCourse?.code || ''}
-                onChange={(e) => setEditingCourse(prev => prev ? { ...prev, code: e.target.value } : null)}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="ECTS"
-                type="number"
-                fullWidth
-                value={editingCourse?.ects || 3}
-                onChange={(e) => setEditingCourse(prev => prev ? { ...prev, ects: Number(e.target.value) } : null)}
-              />
-            </Grid>
-          </Grid>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Ders Türü</InputLabel>
-            <Select
-              value={editingCourse?.type || 'Zorunlu'}
-              label="Ders Türü"
-              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, type: e.target.value as 'Zorunlu' | 'Seçmeli' } : null)}
-            >
-              <MenuItem value="Zorunlu">Zorunlu</MenuItem>
-              <MenuItem value="Seçmeli">Seçmeli</MenuItem>
-            </Select>
-          </FormControl>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              autoFocus
+              label="Ders Başlığı"
+              fullWidth
+              value={editingCourse?.title || ''}
+              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, title: e.target.value } : null)}
+            />
+            <TextField
+              label="Açıklama"
+              fullWidth
+              multiline
+              rows={3}
+              value={editingCourse?.description || ''}
+              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, description: e.target.value } : null)}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Dönem</InputLabel>
+              <Select
+                value={editingCourse?.semester || 'Güz'}
+                label="Dönem"
+                onChange={(e) => setEditingCourse(prev => prev ? { ...prev, semester: e.target.value as 'Güz' | 'Bahar' | 'Yaz' } : null)}
+              >
+                <MenuItem value="Güz">Güz</MenuItem>
+                <MenuItem value="Bahar">Bahar</MenuItem>
+                <MenuItem value="Yaz">Yaz</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Yıl"
+              type="number"
+              fullWidth
+              value={editingCourse?.year || new Date().getFullYear()}
+              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
+            />
+            <TextField
+              label="Bölüm"
+              fullWidth
+              value={editingCourse?.department || ''}
+              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, department: e.target.value } : null)}
+            />
+            <TextField
+              label="Ders Kodu"
+              fullWidth
+              value={editingCourse?.code || ''}
+              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, code: e.target.value } : null)}
+            />
+            <TextField
+              label="ECTS"
+              type="number"
+              fullWidth
+              value={editingCourse?.ects || 3}
+              onChange={(e) => setEditingCourse(prev => prev ? { ...prev, ects: Number(e.target.value) } : null)}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Ders Türü</InputLabel>
+              <Select
+                value={editingCourse?.type || 'Zorunlu'}
+                label="Ders Türü"
+                onChange={(e) => setEditingCourse(prev => prev ? { ...prev, type: e.target.value as 'Zorunlu' | 'Seçmeli' } : null)}
+              >
+                <MenuItem value="Zorunlu">Zorunlu</MenuItem>
+                <MenuItem value="Seçmeli">Seçmeli</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
@@ -530,56 +616,54 @@ export default function Courses() {
       >
         <DialogTitle>Haftalık İçerik Ekle</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Hafta</InputLabel>
-            <Select
-              value={selectedWeek}
-              label="Hafta"
-              onChange={(e) => setSelectedWeek(Number(e.target.value))}
-            >
-              {Array.from({ length: 16 }, (_, i) => i + 1).map((week) => (
-                <MenuItem key={week} value={week}>Hafta {week}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            margin="dense"
-            label="Başlık"
-            fullWidth
-            value={weekTitle}
-            onChange={(e) => setWeekTitle(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Açıklama"
-            fullWidth
-            multiline
-            rows={3}
-            value={weekDescription}
-            onChange={(e) => setWeekDescription(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <Box>
-            <input
-              accept=".pdf,.ppt,.pptx,.docx,.jpg,.jpeg,.png,.gif,.mp4,.webm,.ogg"
-              style={{ display: 'none' }}
-              id="resource-file"
-              type="file"
-              onChange={(e) => editingCourse?._id && handleFileUpload(e, editingCourse._id)}
-            />
-            <label htmlFor="resource-file">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<UploadIcon />}
-                disabled={uploadingFile}
-                fullWidth
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Hafta</InputLabel>
+              <Select
+                value={selectedWeek}
+                label="Hafta"
+                onChange={(e) => setSelectedWeek(Number(e.target.value))}
               >
-                {uploadingFile ? 'Yükleniyor...' : 'Kaynak Yükle'}
-              </Button>
-            </label>
-          </Box>
+                {Array.from({ length: 16 }, (_, i) => i + 1).map((week) => (
+                  <MenuItem key={week} value={week}>Hafta {week}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Başlık"
+              fullWidth
+              value={weekTitle}
+              onChange={(e) => setWeekTitle(e.target.value)}
+            />
+            <TextField
+              label="Açıklama"
+              fullWidth
+              multiline
+              rows={3}
+              value={weekDescription}
+              onChange={(e) => setWeekDescription(e.target.value)}
+            />
+            <Box>
+              <input
+                accept=".pdf,.ppt,.pptx,.docx,.jpg,.jpeg,.png,.gif,.mp4,.webm,.ogg"
+                style={{ display: 'none' }}
+                id="resource-file"
+                type="file"
+                onChange={(e) => editingCourse?._id && handleFileUpload(e, editingCourse._id)}
+              />
+              <label htmlFor="resource-file">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<UploadIcon />}
+                  disabled={uploadingFile}
+                  fullWidth
+                >
+                  {uploadingFile ? 'Yükleniyor...' : 'Kaynak Yükle'}
+                </Button>
+              </label>
+            </Box>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
