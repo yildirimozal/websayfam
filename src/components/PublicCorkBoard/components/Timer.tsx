@@ -21,7 +21,7 @@ const Timer: React.FC<TimerProps> = ({ remainingTime, totalTime }) => {
       sx={{
         position: 'fixed',
         top: 16,
-        right: 16,
+        left: 16,
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         padding: 2,
         borderRadius: 2,
