@@ -34,7 +34,8 @@ const commentSchema = new Schema<IComment>({
   },
   content: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 200
   },
   createdAt: {
     type: Date,
@@ -45,7 +46,8 @@ const commentSchema = new Schema<IComment>({
 const privateNoteSchema = new Schema<IPrivateNote>({
   content: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 200
   },
   position: {
     x: { type: Number, required: true },

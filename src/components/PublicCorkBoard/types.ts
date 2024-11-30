@@ -37,6 +37,19 @@ export interface Note {
   updatedAt: Date;
 }
 
+export interface AddNoteDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (content: string, type: 'note' | 'image') => void;
+}
+
+export interface EditNoteDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (content: string) => void;
+  note: Note;
+}
+
 export interface CommentDialogProps {
   open: boolean;
   onClose: () => void;

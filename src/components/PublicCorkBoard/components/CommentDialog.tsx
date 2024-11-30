@@ -34,6 +34,8 @@ import {
 import { format } from 'date-fns';
 import type { CommentDialogProps, Comment } from '../types';
 
+const MAX_LENGTH = 200;
+
 const CommentDialog: React.FC<CommentDialogProps> = ({
   open, 
   onClose, 
@@ -54,8 +56,15 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
     setLocalComments(initialComments);
   }, [initialComments]);
 
+  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newContent = e.target.value;
+    if (newContent.length <= MAX_LENGTH) {
+      setNewComment(newContent);
+    }
+  };
+
   const handleAddComment = async () => {
-    if (newComment.trim() && session?.user?.email) {
+    if (newComment.trim() && session?.user?.email && newComment.length <= MAX_LENGTH) {
       try {
         // Geçici yorum oluştur
         const tempComment: Comment = {
@@ -129,6 +138,8 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
       return 'Geçersiz tarih';
     }
   };
+
+  const remainingChars = MAX_LENGTH - newComment.length;
 
   return (
     <Dialog 
@@ -299,7 +310,9 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
                 variant="outlined"
                 placeholder="Yorumunuzu yazın..."
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                onChange={handleCommentChange}
+                error={newComment.length > MAX_LENGTH}
+                helperText={`${remainingChars} karakter kaldı`}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -314,7 +327,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
               />
               <IconButton
                 onClick={handleAddComment}
-                disabled={!newComment.trim()}
+                disabled={!newComment.trim() || newComment.length > MAX_LENGTH}
                 color="primary"
                 sx={{ 
                   alignSelf: 'flex-end',

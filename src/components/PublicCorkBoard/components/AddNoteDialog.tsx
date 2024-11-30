@@ -9,8 +9,11 @@ import {
   Button,
   TextField,
   Box,
+  FormHelperText,
 } from '@mui/material';
 import { AddNoteDialogProps } from '../types';
+
+const MAX_LENGTH = 200;
 
 const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   open,
@@ -21,10 +24,21 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   const [type, setType] = useState<'note' | 'image'>('note');
 
   const handleAdd = () => {
-    onAdd(content, type);
-    setContent('');
-    setType('note');
+    if (content.length <= MAX_LENGTH) {
+      onAdd(content, type);
+      setContent('');
+      setType('note');
+    }
   };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newContent = e.target.value;
+    if (newContent.length <= MAX_LENGTH) {
+      setContent(newContent);
+    }
+  };
+
+  const remainingChars = MAX_LENGTH - content.length;
 
   return (
     <Dialog
@@ -56,9 +70,11 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
           rows={4}
           fullWidth
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder={type === 'note' ? 'Notunuzu yazın...' : 'Resim URL\'si girin...'}
           variant="outlined"
+          error={content.length > MAX_LENGTH}
+          helperText={`${remainingChars} karakter kaldı`}
         />
       </DialogContent>
       <DialogActions>
@@ -68,7 +84,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
         <Button 
           onClick={handleAdd}
           variant="contained"
-          disabled={!content.trim()}
+          disabled={!content.trim() || content.length > MAX_LENGTH}
         >
           Ekle
         </Button>

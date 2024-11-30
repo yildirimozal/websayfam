@@ -43,7 +43,8 @@ const commentSchema = new Schema<IComment>({
   },
   content: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 200
   },
   createdAt: {
     type: Date,
@@ -68,7 +69,8 @@ const PublicNoteSchema = new mongoose.Schema<IPublicNote>({
   },
   content: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 200
   },
   position: {
     x: { type: Number, required: true },
