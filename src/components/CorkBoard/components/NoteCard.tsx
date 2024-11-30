@@ -189,7 +189,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           sx={{
             width: '100%',
             height: '100%',
-            backgroundColor: note.type === 'note' ? '#fff7ba' : 'white',
+            backgroundColor: note.type === 'note' ? note.color : 'white',
             transform: `rotate(${note.rotation}deg) ${isActive ? 'scale(1.02)' : ''}`,
             transition: 'transform 0.2s ease-in-out',
             cursor: isAdmin ? (isResizing ? 'se-resize' : 'move') : 'default',
@@ -257,7 +257,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                   fontSize: '1rem',
                   color: '#2c1810',
                   lineHeight: 1.5,
-                  fontFamily: '"Kalam", cursive',
+                  fontFamily: note.fontFamily || 'Roboto',
                   fontWeight: 400,
                   pointerEvents: 'none',
                 }}

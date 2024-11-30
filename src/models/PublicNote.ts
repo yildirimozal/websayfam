@@ -38,11 +38,15 @@ interface IPublicNote {
   updatedAt: Date;
 }
 
-// Sistem sayacı için yeni bir schema
+// Sistem sayacı için schema
 const SystemTimerSchema = new Schema({
   _id: { type: String, default: 'timer' },
   startTime: { type: Date, default: Date.now },
-  duration: { type: Number, default: 60000 } // 1 dakika
+  duration: { type: Number, default: 60000 }, // 1 dakika
+  userNotes: [{
+    email: String,
+    count: { type: Number, default: 0 }
+  }]
 });
 
 export const SystemTimer = mongoose.models.SystemTimer || mongoose.model('SystemTimer', SystemTimerSchema);

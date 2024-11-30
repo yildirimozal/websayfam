@@ -6,6 +6,11 @@ import { authOptions } from '@/app/api/auth/config';
 
 const TIMER_DURATION = 60000; // 1 dakika
 
+interface UserNote {
+  email: string;
+  count: number;
+}
+
 async function getOrCreateTimer() {
   let timer = await SystemTimer.findById('timer');
   
@@ -13,7 +18,8 @@ async function getOrCreateTimer() {
     timer = new SystemTimer({
       _id: 'timer',
       startTime: new Date(),
-      duration: TIMER_DURATION
+      duration: TIMER_DURATION,
+      userNotes: []
     });
     await timer.save();
   }
@@ -30,11 +36,37 @@ async function checkAndResetTimer() {
     // Süre dolmuşsa tüm notları sil ve sayacı sıfırla
     await PublicNote.deleteMany({});
     timer.startTime = now;
+    timer.userNotes = [];
     await timer.save();
     return true;
   }
   
   return false;
+}
+
+async function canUserAddNote(email: string): Promise<boolean> {
+  const timer = await getOrCreateTimer();
+  
+  // Admin her zaman not ekleyebilir
+  if (email === 'ozalyildirim@firat.edu.tr') {
+    return true;
+  }
+
+  const userNote = timer.userNotes.find((un: UserNote) => un.email === email);
+  return !userNote || userNote.count === 0;
+}
+
+async function incrementUserNoteCount(email: string) {
+  const timer = await getOrCreateTimer();
+  const userNote = timer.userNotes.find((un: UserNote) => un.email === email);
+  
+  if (userNote) {
+    userNote.count += 1;
+  } else {
+    timer.userNotes.push({ email, count: 1 });
+  }
+  
+  await timer.save();
 }
 
 export async function GET() {
@@ -72,7 +104,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Oturum açmanız gerekiyor' },
         { status: 401 }
@@ -87,6 +119,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Süre doldu ve notlar silindi. Lütfen sayfayı yenileyin.' },
         { status: 400 }
+      );
+    }
+
+    // Kullanıcının not ekleme hakkını kontrol et
+    const canAdd = await canUserAddNote(session.user.email);
+    if (!canAdd) {
+      return NextResponse.json(
+        { error: 'Bu periyotta zaten bir not eklediniz. Yeni not eklemek için sürenin dolmasını bekleyin.' },
+        { status: 403 }
       );
     }
 
@@ -114,6 +155,10 @@ export async function POST(request: Request) {
 
     const note = new PublicNote(noteData);
     const savedNote = await note.save();
+    
+    // Kullanıcının not sayısını artır
+    await incrementUserNoteCount(session.user.email);
+
     console.log('Saved note:', JSON.stringify(savedNote, null, 2));
 
     // Güncel sayaç bilgisini al

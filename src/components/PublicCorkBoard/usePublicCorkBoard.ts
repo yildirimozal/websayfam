@@ -15,9 +15,7 @@ export const usePublicCorkBoard = () => {
   const [error, setError] = useState<string | null>(null);
   const [remainingTime, setRemainingTime] = useState(0);
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
-
-  // Timer süresini server ile senkronize tutmak için
-  const TIMER_DURATION = 60000; // 1 dakika
+  const [canAddNote, setCanAddNote] = useState(true);
 
   const normalizeNote = useCallback((note: any): Note => {
     return {
@@ -60,6 +58,7 @@ export const usePublicCorkBoard = () => {
         // Eğer notlar sıfırlanmışsa ve client'ta hala notlar varsa
         if (data.timer.wasReset && normalizedNotes.length === 0) {
           setNotes([]);
+          setCanAddNote(true); // Timer sıfırlandığında not ekleme hakkını geri ver
         }
       }
     } catch (err) {
@@ -134,6 +133,10 @@ export const usePublicCorkBoard = () => {
       // Server'dan gelen notu ve sayaç bilgisini işle
       if (data.note) {
         setNotes(prev => [...prev, normalizeNote(data.note)]);
+        // Admin değilse not ekleme hakkını kullandır
+        if (session.user.email !== 'ozalyildirim@firat.edu.tr') {
+          setCanAddNote(false);
+        }
       }
       
       if (data.timer) {
@@ -142,7 +145,10 @@ export const usePublicCorkBoard = () => {
       }
     } catch (err) {
       console.error('Not ekleme hatası:', err);
-      setError('Not eklenirken bir hata oluştu');
+      if (err instanceof Error && err.message.includes('Bu periyotta zaten bir not eklediniz')) {
+        setCanAddNote(false);
+      }
+      setError(err instanceof Error ? err.message : 'Not eklenirken bir hata oluştu');
     }
   };
 
@@ -336,6 +342,7 @@ export const usePublicCorkBoard = () => {
     setError,
     canEditNote,
     canMoveNote,
+    canAddNote,
     handleAddNote,
     handleDeleteNote,
     handleUpdateNote,
@@ -346,6 +353,6 @@ export const usePublicCorkBoard = () => {
     handleCommentDelete,
     remainingTime,
     timerStartTime,
-    TIMER_DURATION
+    TIMER_DURATION: 60000
   };
 };

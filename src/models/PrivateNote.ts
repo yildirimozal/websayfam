@@ -17,6 +17,7 @@ export interface IPrivateNote {
   url?: string;
   rotation: number;
   color: string;
+  fontFamily: string;
   createdAt: Date;
   userId: string;
   likes: string[];
@@ -70,7 +71,11 @@ const privateNoteSchema = new Schema<IPrivateNote>({
   },
   color: {
     type: String,
-    default: 'yellow'
+    default: '#fff9c4'
+  },
+  fontFamily: {
+    type: String,
+    default: 'Roboto'
   },
   createdAt: {
     type: Date,

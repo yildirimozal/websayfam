@@ -24,6 +24,7 @@ const PublicCorkBoard = () => {
     setIsResizing,
     canEditNote,
     canMoveNote,
+    canAddNote,
     handleAddNote,
     handleDeleteNote,
     handleUpdateNote,
@@ -47,6 +48,8 @@ const PublicCorkBoard = () => {
   const handleCommentClick = (note: Note) => {
     setCommentNote(note);
   };
+
+  const isAdmin = session?.user?.email === 'ozalyildirim@firat.edu.tr';
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>
@@ -103,8 +106,8 @@ const PublicCorkBoard = () => {
           />
         ))}
 
-        {session && (
-          <Tooltip title="Yeni Not Ekle">
+        {session && (isAdmin || canAddNote) && (
+          <Tooltip title={canAddNote ? "Yeni Not Ekle" : "Bu periyotta daha fazla not ekleyemezsiniz"}>
             <Fab
               color="primary"
               sx={{
@@ -113,6 +116,7 @@ const PublicCorkBoard = () => {
                 right: 32
               }}
               onClick={() => setIsAddDialogOpen(true)}
+              disabled={!canAddNote && !isAdmin}
             >
               <AddIcon />
             </Fab>

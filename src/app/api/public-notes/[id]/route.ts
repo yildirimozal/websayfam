@@ -11,6 +11,8 @@ interface PublicNoteDocument extends Document {
   position: { x: number; y: number };
   size: { width: number; height: number };
   rotation: number;
+  color: string;
+  fontFamily: string;
   author: {
     name: string;
     email: string;
@@ -20,7 +22,7 @@ interface PublicNoteDocument extends Document {
   comments: any[];
 }
 
-const allowedUpdateFields = ['content', 'position', 'size', 'rotation'];
+const allowedUpdateFields = ['content', 'position', 'size', 'rotation', 'color', 'fontFamily'];
 
 const validateUpdateData = (data: any) => {
   const invalidFields = Object.keys(data).filter(
