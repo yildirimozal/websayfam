@@ -107,7 +107,7 @@ const PublicCorkBoard = () => {
       <Card
         ref={boardRef}
         sx={{
-          height: '100vh',
+          height: '100%',
           width: '100%',
           backgroundColor: '#D2B48C',
           backgroundImage: `
@@ -165,8 +165,8 @@ const PublicCorkBoard = () => {
             onClick={() => setIsAddDialogOpen(true)}
             sx={{
               position: 'absolute',
-              right: 40,
-              bottom: 40,
+              right: 20,
+              top: 20,
               backgroundColor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,
               '&:hover': {
@@ -175,7 +175,7 @@ const PublicCorkBoard = () => {
               width: 56,
               height: 56,
               boxShadow: theme.shadows[8],
-              zIndex: 2,
+              zIndex: 1300,
             }}
           >
             <AddIcon />

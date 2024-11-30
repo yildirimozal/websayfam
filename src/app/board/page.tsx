@@ -19,18 +19,19 @@ const BoardPage = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
             <Box sx={{ 
-              height: 'calc(100vh - 300px)', // Hero yüksekliği için ayarlama
+              height: '80vh',
               backgroundColor: theme.palette.background.paper,
               borderRadius: 2,
               boxShadow: theme.shadows[1],
-              overflow: 'hidden'
+              overflow: 'hidden',
+              position: 'relative' // Eklendi
             }}>
               <PublicCorkBoard />
             </Box>
           </Grid>
           <Grid item xs={12} md={4}>
             <Box sx={{ 
-              height: 'calc(100vh - 300px)', // Hero yüksekliği için ayarlama
+              height: '80vh',
               backgroundColor: theme.palette.background.paper,
               borderRadius: 2,
               boxShadow: theme.shadows[1],
