@@ -25,6 +25,8 @@ interface IPublicNote {
     height: number;
   };
   rotation: number;
+  color: string;
+  fontFamily: string;
   author: {
     name: string;
     email: string;
@@ -36,113 +38,77 @@ interface IPublicNote {
   updatedAt: Date;
 }
 
-const commentSchema = new Schema<IComment>({
-  userId: {
-    type: String,
-    required: true
-  },
-  content: {
-    type: String,
-    required: true,
-    maxlength: 200
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  author: {
-    id: { type: String, required: true },
-    name: { type: String, required: true },
-    email: { type: String },
-    image: { type: String }
-  }
-}, {
-  _id: false, // MongoDB'nin otomatik _id atamasını devre dışı bırak
-  id: false // Mongoose'un virtual id atamasını devre dışı bırak
+// Sistem sayacı için yeni bir schema
+const SystemTimerSchema = new Schema({
+  _id: { type: String, default: 'timer' },
+  startTime: { type: Date, default: Date.now },
+  duration: { type: Number, default: 60000 } // 1 dakika
 });
 
-const PublicNoteSchema = new mongoose.Schema<IPublicNote>({
-  type: {
-    type: String,
-    enum: ['note', 'image'],
-    required: true
-  },
-  content: {
-    type: String,
-    required: true,
-    maxlength: 200
-  },
+export const SystemTimer = mongoose.models.SystemTimer || mongoose.model('SystemTimer', SystemTimerSchema);
+
+const PublicNoteSchema = new Schema({
+  type: String,
+  content: String,
   position: {
-    x: { type: Number, required: true },
-    y: { type: Number, required: true }
+    x: Number,
+    y: Number
   },
   size: {
-    width: { type: Number, default: 200 },
-    height: { type: Number, default: 150 }
+    width: Number,
+    height: Number
   },
-  rotation: {
-    type: Number,
-    default: 0
-  },
+  rotation: Number,
+  color: String,
+  fontFamily: String,
   author: {
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    image: { type: String }
+    name: String,
+    email: String,
+    image: String
   },
-  likes: [{
-    type: String,
-    ref: 'User'
-  }],
-  comments: [commentSchema],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  likes: [String],
+  comments: [{
+    userId: String,
+    content: String,
+    createdAt: { type: Date, default: Date.now },
+    author: {
+      id: String,
+      name: String,
+      email: String,
+      image: String
+    }
+  }]
 }, {
   timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc: any, ret: Record<string, any>) {
-      ret.id = ret._id.toString();
-      delete ret._id;
-      delete ret.__v;
-      
-      // Yorumları düzgün formatlayalım
-      if (ret.comments) {
-        ret.comments = ret.comments.map((comment: any) => ({
-          ...comment,
-          id: comment.userId + '_' + comment.createdAt.getTime(), // Benzersiz ID oluştur
-          createdAt: comment.createdAt.toISOString()
-        }));
-      }
-      
-      return ret;
-    }
-  }
+  strict: false,
+  minimize: false
 });
 
-// Beğeni sayısını hesaplayan virtual alan
+// Virtuals
 PublicNoteSchema.virtual('likeCount').get(function() {
   return this.likes?.length || 0;
 });
 
-// Yorum sayısını hesaplayan virtual alan
 PublicNoteSchema.virtual('commentCount').get(function() {
   return this.comments?.length || 0;
 });
 
+// Hooks
 PublicNoteSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
+  if (!this.color) this.color = '#fff9c4';
+  if (!this.fontFamily) this.fontFamily = 'Roboto';
   next();
 });
 
-PublicNoteSchema.pre('findOneAndUpdate', function(next) {
-  this.set({ updatedAt: new Date() });
-  next();
+// JSON dönüşümü
+PublicNoteSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: function(doc: any, ret: any) {
+    ret.id = ret._id;
+    delete ret._id;
+    return ret;
+  }
 });
 
 export default mongoose.models.PublicNote || mongoose.model<IPublicNote>('PublicNote', PublicNoteSchema);

@@ -13,6 +13,11 @@ export const usePublicCorkBoard = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
+
+  // Timer süresini server ile senkronize tutmak için
+  const TIMER_DURATION = 60000; // 1 dakika
 
   const normalizeNote = useCallback((note: any): Note => {
     return {
@@ -27,6 +32,8 @@ export const usePublicCorkBoard = () => {
         ? note.size
         : { width: 200, height: 200 },
       rotation: typeof note.rotation === 'number' ? note.rotation : 0,
+      color: note.color || '#fff9c4',
+      fontFamily: note.fontFamily || 'Roboto',
       likes: Array.isArray(note.likes) ? note.likes : [],
       comments: Array.isArray(note.comments) ? note.comments : [],
       createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
@@ -41,8 +48,20 @@ export const usePublicCorkBoard = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      const normalizedNotes = Array.isArray(data) ? data.map(normalizeNote) : [];
+      
+      // Server'dan gelen notları ve sayaç bilgisini işle
+      const normalizedNotes = Array.isArray(data.notes) ? data.notes.map(normalizeNote) : [];
       setNotes(normalizedNotes);
+      
+      if (data.timer) {
+        setTimerStartTime(new Date(data.timer.startTime));
+        setRemainingTime(data.timer.remainingTime);
+        
+        // Eğer notlar sıfırlanmışsa ve client'ta hala notlar varsa
+        if (data.timer.wasReset && normalizedNotes.length === 0) {
+          setNotes([]);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu';
       setError(`Notları yüklerken hata: ${errorMessage}`);
@@ -52,6 +71,11 @@ export const usePublicCorkBoard = () => {
 
   useEffect(() => {
     fetchNotes();
+    
+    // Her 5 saniyede bir sayaç bilgisini güncelle
+    const interval = setInterval(fetchNotes, 5000);
+    
+    return () => clearInterval(interval);
   }, [fetchNotes]);
 
   const canEditNote = useCallback((note: Note) => {
@@ -63,13 +87,11 @@ export const usePublicCorkBoard = () => {
   const canMoveNote = useCallback((note: Note) => {
     if (!session?.user?.email) return false;
     const isAdmin = session.user.email === 'ozalyildirim@firat.edu.tr';
-    // Admin tüm notları sürükleyebilir
     if (isAdmin) return true;
-    // Diğer kullanıcılar sadece kendi notlarını sürükleyebilir
     return session.user.email === note.author?.email;
   }, [session]);
 
-  const handleAddNote = async (content: string, type: 'note' | 'image'): Promise<void> => {
+  const handleAddNote = async (content: string, type: 'note' | 'image', color: string, fontFamily: string): Promise<void> => {
     if (!session?.user) {
       setError('Not eklemek için giriş yapmalısınız');
       return;
@@ -81,21 +103,25 @@ export const usePublicCorkBoard = () => {
     }
 
     try {
+      const noteData = {
+        content,
+        type,
+        position: { x: 50, y: 50 },
+        size: { width: 200, height: 200 },
+        rotation: Math.random() * 10 - 5,
+        color,
+        fontFamily,
+        author: {
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image || '/default-avatar.png'
+        }
+      };
+
       const response = await fetch('/api/public-notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content,
-          type,
-          position: { x: 50, y: 50 },
-          size: { width: 200, height: 200 },
-          rotation: Math.random() * 10 - 5,
-          author: {
-            name: session.user.name,
-            email: session.user.email,
-            image: session.user.image || '/default-avatar.png'
-          }
-        })
+        body: JSON.stringify(noteData)
       });
 
       if (!response.ok) {
@@ -103,7 +129,17 @@ export const usePublicCorkBoard = () => {
         throw new Error(error.message || 'Not eklenemedi');
       }
 
-      await fetchNotes();
+      const data = await response.json();
+      
+      // Server'dan gelen notu ve sayaç bilgisini işle
+      if (data.note) {
+        setNotes(prev => [...prev, normalizeNote(data.note)]);
+      }
+      
+      if (data.timer) {
+        setTimerStartTime(new Date(data.timer.startTime));
+        setRemainingTime(data.timer.remainingTime);
+      }
     } catch (err) {
       console.error('Not ekleme hatası:', err);
       setError('Not eklenirken bir hata oluştu');
@@ -133,7 +169,7 @@ export const usePublicCorkBoard = () => {
     }
   };
 
-  const handleUpdateNote = async (noteId: string, content: string): Promise<void> => {
+  const handleUpdateNote = async (noteId: string, content: string, color: string, fontFamily: string): Promise<void> => {
     if (!session?.user) {
       setError('Not güncellemek için giriş yapmalısınız');
       return;
@@ -143,7 +179,7 @@ export const usePublicCorkBoard = () => {
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
+        body: JSON.stringify({ content, color, fontFamily })
       });
 
       if (!response.ok) {
@@ -160,7 +196,6 @@ export const usePublicCorkBoard = () => {
 
   const handleUpdateNotePosition = async (noteId: string, position: { x: number; y: number }): Promise<void> => {
     try {
-      // Yerel state'i hemen güncelle
       setNotes(prevNotes => 
         prevNotes.map(note => 
           note.id === noteId 
@@ -169,7 +204,6 @@ export const usePublicCorkBoard = () => {
         )
       );
 
-      // API'ye gönder
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -183,7 +217,6 @@ export const usePublicCorkBoard = () => {
     } catch (err) {
       console.error('Not konumu güncelleme hatası:', err);
       setError('Not konumu güncellenirken bir hata oluştu');
-      // Hata durumunda orijinal notları geri yükle
       await fetchNotes();
     }
   };
@@ -311,5 +344,8 @@ export const usePublicCorkBoard = () => {
     handleLikeToggle,
     handleCommentAdd,
     handleCommentDelete,
+    remainingTime,
+    timerStartTime,
+    TIMER_DURATION
   };
 };
