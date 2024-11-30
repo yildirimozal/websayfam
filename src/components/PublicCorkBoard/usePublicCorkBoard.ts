@@ -9,6 +9,12 @@ export const generateTempId = () => Math.random().toString(36).substr(2, 9);
 // 12 saat = 12 * 60 * 60 * 1000 milisaniye
 const TIMER_DURATION = 12 * 60 * 60 * 1000;
 
+// Maksimum not boyutları
+const MAX_NOTE_SIZE = {
+  width: 250,
+  height: 250
+};
+
 export const usePublicCorkBoard = () => {
   const { data: session, status } = useSession();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -32,7 +38,10 @@ export const usePublicCorkBoard = () => {
         ? note.position 
         : { x: 50, y: 50 },
       size: note.size && typeof note.size.width === 'number' && typeof note.size.height === 'number'
-        ? note.size
+        ? {
+            width: Math.min(note.size.width, MAX_NOTE_SIZE.width),
+            height: Math.min(note.size.height, MAX_NOTE_SIZE.height)
+          }
         : { width: 200, height: 200 },
       rotation: typeof note.rotation === 'number' ? note.rotation : 0,
       color: note.color || '#fff9c4',
@@ -111,7 +120,10 @@ export const usePublicCorkBoard = () => {
         content: content,
         type,
         position: { x: 50, y: 50 },
-        size: { width: type === 'image' ? 300 : 200, height: type === 'image' ? 300 : 200 },
+        size: { 
+          width: Math.min(type === 'image' ? 250 : 200, MAX_NOTE_SIZE.width),
+          height: Math.min(type === 'image' ? 250 : 200, MAX_NOTE_SIZE.height)
+        },
         rotation: Math.random() * 10 - 5,
         color,
         fontFamily,
@@ -241,10 +253,16 @@ export const usePublicCorkBoard = () => {
     }
 
     try {
+      // Boyutu maksimum değerlerle sınırla
+      const limitedSize = {
+        width: Math.min(size.width, MAX_NOTE_SIZE.width),
+        height: Math.min(size.height, MAX_NOTE_SIZE.height)
+      };
+
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ size })
+        body: JSON.stringify({ size: limitedSize })
       });
 
       if (!response.ok) {

@@ -18,6 +18,10 @@ import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 
 const MAX_LENGTH = 200;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGE_SIZE = {
+  width: 250,
+  height: 250
+};
 
 const colorOptions = [
   { value: '#fff9c4', label: 'Sarı' },
@@ -115,6 +119,8 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       const formData = new FormData();
       formData.append('file', file);
       formData.append('isPublic', 'true'); // PublicCorkBoard için true
+      formData.append('maxWidth', MAX_IMAGE_SIZE.width.toString());
+      formData.append('maxHeight', MAX_IMAGE_SIZE.height.toString());
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -126,7 +132,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       }
 
       const data = await response.json();
-      console.log('Uploaded image URL:', data.url); // URL'i logla
+      console.log('Uploaded image URL:', data.url);
       setContent(data.url);
       setType('image');
     } catch (error) {
@@ -161,6 +167,8 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       const formData = new FormData();
       formData.append('file', file);
       formData.append('isPublic', 'true'); // PublicCorkBoard için true
+      formData.append('maxWidth', MAX_IMAGE_SIZE.width.toString());
+      formData.append('maxHeight', MAX_IMAGE_SIZE.height.toString());
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -172,7 +180,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       }
 
       const data = await response.json();
-      console.log('Uploaded image URL:', data.url); // URL'i logla
+      console.log('Uploaded image URL:', data.url);
       setContent(data.url);
       setType('image');
     } catch (error) {
@@ -257,7 +265,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
                     Resim yüklemek için tıklayın veya sürükleyin
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
-                    (Maksimum 5MB)
+                    (Maksimum 5MB, {MAX_IMAGE_SIZE.width}x{MAX_IMAGE_SIZE.height} piksel)
                   </Typography>
                 </>
               )}

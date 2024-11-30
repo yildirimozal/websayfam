@@ -30,6 +30,11 @@ interface NoteCardProps {
   onClick?: () => void;
 }
 
+const MAX_NOTE_SIZE = {
+  width: 250,
+  height: 250
+};
+
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
   isActive,
@@ -57,7 +62,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   return (
     <Rnd
-      size={{ width: note.size.width, height: note.size.height }}
+      size={{ 
+        width: Math.min(note.size.width, MAX_NOTE_SIZE.width), 
+        height: Math.min(note.size.height, MAX_NOTE_SIZE.height) 
+      }}
       position={{ x: note.position.x, y: note.position.y }}
       enableResizing={canEdit ? {
         bottom: true,
@@ -70,6 +78,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
       onResize={onResize}
       onResizeStop={onResizeStop}
       bounds="parent"
+      maxWidth={MAX_NOTE_SIZE.width}
+      maxHeight={MAX_NOTE_SIZE.height}
       style={{
         zIndex: isActive ? 1000 : 1
       }}
