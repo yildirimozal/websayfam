@@ -2,6 +2,17 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Note } from '../types';
 import { useSession } from 'next-auth/react';
 
+interface AddNoteData {
+  type: 'note' | 'image' | 'video';
+  content?: string;
+  url?: string;
+  color?: string;
+  fontFamily?: string;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  rotation: number;
+}
+
 export const useCorkBoard = () => {
   const { data: session } = useSession();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -83,34 +94,35 @@ export const useCorkBoard = () => {
     }
   };
 
-  const handleAddNote = async () => {
-    if (!editingNote || !session?.user?.isAdmin) return;
+  const handleAddNote = async (noteData: AddNoteData) => {
+    if (!session?.user?.isAdmin) return;
 
     try {
-      const method = editingNote._id ? 'PUT' : 'POST';
-      const endpoint = editingNote._id ? `/api/private-notes/${editingNote._id}` : '/api/private-notes';
-      const body = editingNote._id 
-        ? JSON.stringify(editingNote)
-        : JSON.stringify({
-            ...editingNote,
-            position: { x: 20, y: 20 },
-            rotation: Math.random() * 6 - 3,
-            size: { width: 200, height: 150 },
-            color: 'yellow',
-            userId: session.user.id,
-            likes: [],
-            comments: []
-          });
+      const newNote = {
+        type: noteData.type,
+        content: noteData.type === 'note' ? noteData.content : undefined,
+        url: noteData.type === 'image' ? noteData.url : undefined,
+        position: noteData.position,
+        size: noteData.size,
+        rotation: noteData.rotation,
+        color: noteData.color || '#fff9c4',
+        fontFamily: noteData.fontFamily || 'Roboto',
+        userId: session.user.id,
+        likes: [],
+        comments: []
+      };
 
-      const response = await fetch(endpoint, {
-        method,
+      console.log('Gönderilen not:', newNote);
+
+      const response = await fetch('/api/private-notes', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body,
+        body: JSON.stringify(newNote),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Not eklenirken/güncellenirken hata oluştu');
+        throw new Error(errorData.error || 'Not eklenirken hata oluştu');
       }
 
       await fetchNotes();
@@ -120,9 +132,9 @@ export const useCorkBoard = () => {
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('Not eklenirken/güncellenirken beklenmeyen bir hata oluştu');
+        setError('Not eklenirken beklenmeyen bir hata oluştu');
       }
-      console.error('Not eklenirken/güncellenirken hata:', error);
+      console.error('Not eklenirken hata:', error);
     }
   };
 

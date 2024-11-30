@@ -20,7 +20,8 @@ export interface Comment {
 export interface Note {
   id: string;
   type: 'note' | 'image';
-  content: string;
+  content?: string;
+  url?: string;
   position: {
     x: number;
     y: number;
@@ -42,7 +43,7 @@ export interface Note {
 export interface AddNoteDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (content: string, type: 'note' | 'image', color: string, fontFamily: string) => void;
+  onAdd: (content: string, type: 'note' | 'image', color: string, fontFamily: string, url?: string) => void;
 }
 
 export interface EditNoteDialogProps {
@@ -75,4 +76,5 @@ export interface NoteCardProps {
   onLikeToggle: () => void;
   onCommentClick: () => void;
   onEdit: () => void;
+  onClick?: () => void;
 }

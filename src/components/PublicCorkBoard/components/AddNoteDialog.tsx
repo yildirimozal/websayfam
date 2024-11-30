@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,10 +10,14 @@ import {
   TextField,
   Box,
   Typography,
+  IconButton,
+  CircularProgress,
 } from '@mui/material';
 import { AddNoteDialogProps } from '../types';
+import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 
 const MAX_LENGTH = 200;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const colorOptions = [
   { value: '#fff9c4', label: 'Sarı' },
@@ -42,6 +46,9 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   const [type, setType] = useState<'note' | 'image'>('note');
   const [selectedColor, setSelectedColor] = useState('#fff9c4');
   const [selectedFont, setSelectedFont] = useState('Roboto');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = () => {
     if (content.length <= MAX_LENGTH) {
@@ -73,6 +80,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
     setType('note');
     setSelectedColor('#fff9c4');
     setSelectedFont('Roboto');
+    setUploadError(null);
     onClose();
   };
 
@@ -84,6 +92,100 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   const handleFontSelect = (font: string) => {
     console.log('Font selected:', font);
     setSelectedFont(font);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('Dosya boyutu 5MB\'dan küçük olmalıdır');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Sadece resim dosyaları yüklenebilir');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('isPublic', 'true'); // PublicCorkBoard için true
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Resim yüklenemedi');
+      }
+
+      const data = await response.json();
+      console.log('Uploaded image URL:', data.url); // URL'i logla
+      setContent(data.url);
+      setType('image');
+    } catch (error) {
+      console.error('Resim yükleme hatası:', error);
+      setUploadError('Resim yüklenirken bir hata oluştu');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('Dosya boyutu 5MB\'dan küçük olmalıdır');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Sadece resim dosyaları yüklenebilir');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('isPublic', 'true'); // PublicCorkBoard için true
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Resim yüklenemedi');
+      }
+
+      const data = await response.json();
+      console.log('Uploaded image URL:', data.url); // URL'i logla
+      setContent(data.url);
+      setType('image');
+    } catch (error) {
+      console.error('Resim yükleme hatası:', error);
+      setUploadError('Resim yüklenirken bir hata oluştu');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   return (
@@ -111,19 +213,76 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
           </Button>
         </Box>
 
-        <TextField
-          autoFocus
-          multiline
-          rows={4}
-          fullWidth
-          value={content}
-          onChange={handleContentChange}
-          placeholder={type === 'note' ? 'Notunuzu yazın...' : 'Resim URL\'si girin...'}
-          variant="outlined"
-          error={content.length > MAX_LENGTH}
-          helperText={`${remainingChars} karakter kaldı`}
-          sx={{ mb: 2 }}
-        />
+        {type === 'image' ? (
+          <Box sx={{ mb: 2 }}>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+            />
+            <Box
+              sx={{
+                border: '2px dashed #ccc',
+                borderRadius: 1,
+                p: 2,
+                textAlign: 'center',
+                cursor: 'pointer',
+                '&:hover': {
+                  borderColor: '#1976d2',
+                  backgroundColor: '#f5f5f5'
+                }
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              {isUploading ? (
+                <CircularProgress size={24} />
+              ) : content ? (
+                <img
+                  src={content}
+                  alt="Yüklenen resim"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '200px',
+                    objectFit: 'contain'
+                  }}
+                />
+              ) : (
+                <>
+                  <CloudUploadIcon sx={{ fontSize: 48, color: '#666' }} />
+                  <Typography>
+                    Resim yüklemek için tıklayın veya sürükleyin
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    (Maksimum 5MB)
+                  </Typography>
+                </>
+              )}
+            </Box>
+            {uploadError && (
+              <Typography color="error" variant="caption" sx={{ mt: 1 }}>
+                {uploadError}
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <TextField
+            autoFocus
+            multiline
+            rows={4}
+            fullWidth
+            value={content}
+            onChange={handleContentChange}
+            placeholder="Notunuzu yazın..."
+            variant="outlined"
+            error={content.length > MAX_LENGTH}
+            helperText={`${remainingChars} karakter kaldı`}
+            sx={{ mb: 2 }}
+          />
+        )}
 
         {type === 'note' && (
           <>
@@ -188,7 +347,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
         <Button 
           onClick={handleAdd}
           variant="contained"
-          disabled={!content.trim() || content.length > MAX_LENGTH}
+          disabled={!content.trim() || content.length > MAX_LENGTH || isUploading}
         >
           Ekle
         </Button>

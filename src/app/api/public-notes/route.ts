@@ -4,7 +4,8 @@ import PublicNote, { SystemTimer } from '@/models/PublicNote';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/config';
 
-const TIMER_DURATION = 60000; // 1 dakika
+// 12 saat = 12 * 60 * 60 * 1000 milisaniye
+const TIMER_DURATION = 12 * 60 * 60 * 1000;
 
 interface UserNote {
   email: string;

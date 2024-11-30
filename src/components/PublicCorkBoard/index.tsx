@@ -8,6 +8,7 @@ import NoteCard from './components/NoteCard';
 import AddNoteDialog from './components/AddNoteDialog';
 import EditNoteDialog from './components/EditNoteDialog';
 import CommentDialog from './components/CommentDialog';
+import NoteDetailDialog from './components/NoteDetailDialog';
 import Timer from './components/Timer';
 import { Note } from './types';
 
@@ -34,7 +35,9 @@ const PublicCorkBoard = () => {
     handleCommentAdd,
     handleCommentDelete,
     remainingTime,
-    TIMER_DURATION
+    TIMER_DURATION,
+    selectedNote,
+    setSelectedNote
   } = usePublicCorkBoard();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -103,6 +106,7 @@ const PublicCorkBoard = () => {
             onLikeToggle={() => handleLikeToggle(note.id)}
             onCommentClick={() => handleCommentClick(note)}
             onEdit={() => handleEdit(note)}
+            onClick={() => setSelectedNote(note)}
           />
         ))}
 
@@ -154,6 +158,12 @@ const PublicCorkBoard = () => {
             }
           />
         )}
+
+        <NoteDetailDialog
+          note={selectedNote}
+          open={!!selectedNote}
+          onClose={() => setSelectedNote(null)}
+        />
       </Card>
     </Box>
   );

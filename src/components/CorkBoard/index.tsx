@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { NoteCard } from './components/NoteCard';
-import { AddNoteDialog } from './components/AddNoteDialog';
-import { CorkBoardContainer } from './components/CorkBoardContainer';
+import NoteCard from './components/NoteCard';
+import AddNoteDialog from './components/AddNoteDialog';
+import CorkBoardContainer from './components/CorkBoardContainer';
 import { useCorkBoard } from './hooks/useCorkBoard';
 import { Note } from './types';
 
@@ -119,9 +119,11 @@ const CorkBoard = () => {
       isAdmin={!!session?.user?.isAdmin}
       onAddClick={() => {
         setEditingNote({
+          id: 'temp-' + Date.now(),
           type: 'note',
           content: '',
           position: { x: 0, y: 0 },
+          size: { width: 200, height: 200 },
           rotation: 0,
           color: '#fff9c4',
           fontFamily: 'Roboto',
@@ -162,16 +164,29 @@ const CorkBoard = () => {
         </div>
       ))}
 
-      <AddNoteDialog
-        open={isDialogOpen}
-        editingNote={editingNote}
-        onClose={() => {
-          setIsDialogOpen(false);
-          setEditingNote(null);
-        }}
-        onSave={handleAddNote}
-        onNoteChange={setEditingNote}
-      />
+      {isDialogOpen && (
+        <AddNoteDialog
+          open={isDialogOpen}
+          onClose={() => {
+            setIsDialogOpen(false);
+            setEditingNote(null);
+          }}
+          onAdd={(content, type, color, fontFamily) => {
+            if (!content.trim()) return;
+            
+            handleAddNote({
+              type,
+              content: type === 'note' ? content : '',
+              url: type === 'image' ? content : undefined,
+              color,
+              fontFamily,
+              position: { x: 50, y: 50 },
+              size: { width: type === 'image' ? 300 : 200, height: type === 'image' ? 300 : 200 },
+              rotation: Math.random() * 10 - 5,
+            });
+          }}
+        />
+      )}
     </CorkBoardContainer>
   );
 };

@@ -3,18 +3,9 @@
 import React from 'react';
 import { Box, Card, useTheme, Fab, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
+import { CorkBoardContainerProps } from '../types';
 
-interface CorkBoardContainerProps {
-  children: React.ReactNode;
-  isLoading: boolean;
-  error: string | null;
-  onErrorClose: () => void;
-  isAdmin: boolean;
-  onAddClick: () => void;
-  boardRef: React.RefObject<HTMLDivElement>;
-}
-
-export const CorkBoardContainer: React.FC<CorkBoardContainerProps> = ({
+const CorkBoardContainer: React.FC<CorkBoardContainerProps> = ({
   children,
   isLoading,
   error,
@@ -95,3 +86,5 @@ export const CorkBoardContainer: React.FC<CorkBoardContainerProps> = ({
     </Box>
   );
 };
+
+export default CorkBoardContainer;

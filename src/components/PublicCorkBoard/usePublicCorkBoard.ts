@@ -6,6 +6,9 @@ import { Note } from './types';
 
 export const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
+// 12 saat = 12 * 60 * 60 * 1000 milisaniye
+const TIMER_DURATION = 12 * 60 * 60 * 1000;
+
 export const usePublicCorkBoard = () => {
   const { data: session, status } = useSession();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -16,12 +19,14 @@ export const usePublicCorkBoard = () => {
   const [remainingTime, setRemainingTime] = useState(0);
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [canAddNote, setCanAddNote] = useState(true);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   const normalizeNote = useCallback((note: any): Note => {
     return {
       id: note.id || note._id || generateTempId(),
       content: note.content || '',
       type: note.type || 'note',
+      url: note.url,
       author: note.author || null,
       position: note.position && typeof note.position.x === 'number' && typeof note.position.y === 'number' 
         ? note.position 
@@ -103,10 +108,10 @@ export const usePublicCorkBoard = () => {
 
     try {
       const noteData = {
-        content,
+        content: content,
         type,
         position: { x: 50, y: 50 },
-        size: { width: 200, height: 200 },
+        size: { width: type === 'image' ? 300 : 200, height: type === 'image' ? 300 : 200 },
         rotation: Math.random() * 10 - 5,
         color,
         fontFamily,
@@ -116,6 +121,8 @@ export const usePublicCorkBoard = () => {
           image: session.user.image || '/default-avatar.png'
         }
       };
+
+      console.log('Creating note with data:', noteData);
 
       const response = await fetch('/api/public-notes', {
         method: 'POST',
@@ -353,6 +360,8 @@ export const usePublicCorkBoard = () => {
     handleCommentDelete,
     remainingTime,
     timerStartTime,
-    TIMER_DURATION: 60000
+    TIMER_DURATION,
+    selectedNote,
+    setSelectedNote
   };
 };

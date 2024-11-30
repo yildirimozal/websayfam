@@ -5,22 +5,10 @@ import { Card, CardContent, Typography, Box, IconButton, useTheme, Badge, Dialog
 import { Delete as DeleteIcon, Edit as EditIcon, Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, Comment as CommentIcon } from '@mui/icons-material';
 import Image from 'next/image';
 import { ResizableBox } from 'react-resizable';
-import { Note, Comment } from '../types';
+import { Note, Comment, NoteCardProps } from '../types';
 import { useSession, signIn } from 'next-auth/react';
 
-interface NoteCardProps {
-  note: Note;
-  isActive: boolean;
-  isResizing: boolean;
-  isAdmin: boolean;
-  onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onResize: (e: any, { size }: { size: { width: number; height: number } }) => void;
-  onResizeStop: (e: any, { size }: { size: { width: number; height: number } }) => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}
-
-export const NoteCard: React.FC<NoteCardProps> = ({
+const NoteCard: React.FC<NoteCardProps> = ({
   note,
   isActive,
   isResizing,
@@ -277,7 +265,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               }}
             >
               <Image
-                src={note.content}
+                src={note.url || ''}
                 alt="Pano resmi"
                 fill
                 style={{ 
@@ -408,3 +396,5 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     </>
   );
 };
+
+export default NoteCard;

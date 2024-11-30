@@ -38,11 +38,14 @@ interface IPublicNote {
   updatedAt: Date;
 }
 
+// 12 saat = 12 * 60 * 60 * 1000 milisaniye
+const TIMER_DURATION = 12 * 60 * 60 * 1000;
+
 // Sistem sayacı için schema
 const SystemTimerSchema = new Schema({
   _id: { type: String, default: 'timer' },
   startTime: { type: Date, default: Date.now },
-  duration: { type: Number, default: 60000 }, // 1 dakika
+  duration: { type: Number, default: TIMER_DURATION }, // 12 saat
   userNotes: [{
     email: String,
     count: { type: Number, default: 0 }

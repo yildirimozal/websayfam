@@ -47,8 +47,10 @@ const commentSchema = new Schema<IComment>({
 const privateNoteSchema = new Schema<IPrivateNote>({
   content: {
     type: String,
-    required: true,
-    maxlength: 200
+    maxlength: 200,
+    required: function(this: IPrivateNote) {
+      return this.type === 'note';
+    }
   },
   position: {
     x: { type: Number, required: true },
@@ -94,6 +96,9 @@ const privateNoteSchema = new Schema<IPrivateNote>({
     width: { type: Number },
     height: { type: Number }
   }
+}, {
+  strict: false,
+  minimize: false
 });
 
 // Beğeni sayısını hesaplayan virtual alan
