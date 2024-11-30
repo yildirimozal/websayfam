@@ -19,16 +19,15 @@ interface NoteCardProps {
   canEdit: boolean;
   canMove: boolean;
   isLiked: boolean;
-  onDragStart: (e: React.MouseEvent | React.TouchEvent) => void;
+  onDragStart: () => void;
   onResize: (e: any, direction: any, ref: any, delta: any, position: any) => void;
   onResizeStop: () => void;
   onDelete: () => void;
   onLikeToggle: () => void;
   onCommentClick: () => void;
   onEdit: () => void;
+  onDragStop: (e: any, data: { x: number; y: number }) => void;
 }
-
-const NOTE_BG_COLOR = '#FEFAE0';
 
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
@@ -43,33 +42,33 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onDelete,
   onLikeToggle,
   onCommentClick,
-  onEdit
+  onEdit,
+  onDragStop
 }) => {
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!canMove) return;
-    onDragStart(e);
-  };
-
   return (
     <Rnd
       size={{ width: note.size.width, height: note.size.height }}
+      position={{ x: note.position.x, y: note.position.y }}
       enableResizing={canEdit ? {
         bottom: true,
         right: true,
         bottomRight: true
       } : false}
-      disableDragging={true}
+      disableDragging={!canMove}
+      onDragStart={onDragStart}
+      onDragStop={onDragStop}
       onResize={onResize}
       onResizeStop={onResizeStop}
-      style={{ position: 'relative' }}
+      bounds="parent"
+      style={{
+        zIndex: isActive ? 1000 : 1
+      }}
     >
       <Card
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleMouseDown}
         sx={{
           width: '100%',
           height: '100%',
-          backgroundColor: NOTE_BG_COLOR,
+          backgroundColor: note.type === 'note' ? note.color : 'white',
           boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
           transition: 'box-shadow 0.3s ease',
           cursor: canMove ? 'grab' : 'default',
@@ -82,7 +81,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
           position: 'relative',
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          transform: `rotate(${note.rotation}deg)`
         }}
       >
         <Box
@@ -91,7 +91,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
             alignItems: 'center',
             p: 1,
             borderBottom: '1px solid rgba(0,0,0,0.1)',
-            backgroundColor: NOTE_BG_COLOR,
+            backgroundColor: 'rgba(255,255,255,0.5)',
           }}
         >
           <Avatar
@@ -123,22 +123,39 @@ const NoteCard: React.FC<NoteCardProps> = ({
         </Box>
 
         <CardContent sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
-          <Typography
-            variant="body1"
-            component="div"
-            sx={{
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word'
-            }}
-          >
-            {note.content}
-          </Typography>
+          {note.type === 'note' ? (
+            <Typography
+              variant="body1"
+              component="div"
+              sx={{
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontFamily: note.fontFamily,
+                fontSize: '1rem',
+                lineHeight: 1.5,
+                color: '#2c1810'
+              }}
+            >
+              {note.content}
+            </Typography>
+          ) : (
+            <Box
+              component="img"
+              src={note.content}
+              alt="Not resmi"
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+            />
+          )}
         </CardContent>
 
         <CardActions
           sx={{
             justifyContent: 'space-between',
-            backgroundColor: NOTE_BG_COLOR,
+            backgroundColor: 'rgba(255,255,255,0.5)',
             borderTop: '1px solid rgba(0,0,0,0.1)',
             p: 1
           }}
@@ -152,7 +169,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   '& .MuiBadge-badge': {
                     right: 5,
                     top: 5,
-                    border: `2px solid ${NOTE_BG_COLOR}`
+                    border: `2px solid ${note.color}`
                   }
                 }}
               >
@@ -174,7 +191,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   '& .MuiBadge-badge': {
                     right: 5,
                     top: 5,
-                    border: `2px solid ${NOTE_BG_COLOR}`
+                    border: `2px solid ${note.color}`
                   }
                 }}
               >
