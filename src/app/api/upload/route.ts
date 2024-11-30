@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/config';
+import { authOptions } from '../auth/config';
 import { uploadToS3 } from '@/utils/s3';
+
+// Route segment config
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
@@ -59,9 +63,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
