@@ -14,8 +14,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Visibility, Favorite } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
@@ -35,6 +36,8 @@ interface BlogPost {
     name: string;
     email: string;
   };
+  views: number;
+  likes: string[];
 }
 
 interface BlogListProps {
@@ -135,9 +138,29 @@ export default function BlogList({ blogs, isAdmin }: BlogListProps) {
                 <ReactMarkdown>{blog.content}</ReactMarkdown>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(blog.createdAt).toLocaleDateString('tr-TR')} - {blog.author.name}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(blog.createdAt).toLocaleDateString('tr-TR')} - {blog.author.name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <IconButton size="small" disabled>
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                      <Typography variant="caption" color="text.secondary">
+                        {blog.views || 0}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <IconButton size="small" disabled>
+                        <Favorite fontSize="small" />
+                      </IconButton>
+                      <Typography variant="caption" color="text.secondary">
+                        {blog.likes?.length || 0}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
                 <Button 
                   size="small" 
                   color="primary"

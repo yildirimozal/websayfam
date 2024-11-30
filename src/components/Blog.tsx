@@ -10,9 +10,10 @@ import {
   Grid,
   useTheme,
   Avatar,
-  CircularProgress
+  CircularProgress,
+  IconButton
 } from '@mui/material';
-import { AccessTime } from '@mui/icons-material';
+import { AccessTime, Visibility, Favorite } from '@mui/icons-material';
 import NextLink from 'next/link';
 
 interface BlogPost {
@@ -28,6 +29,8 @@ interface BlogPost {
     email: string;
   };
   summary?: string;
+  views: number;
+  likes: string[];
 }
 
 const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
@@ -146,6 +149,24 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
                     }}
                   />
                 ))}
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <IconButton size="small" disabled>
+                    <Visibility fontSize="small" />
+                  </IconButton>
+                  <Typography variant="caption" color="text.secondary">
+                    {post.views || 0}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <IconButton size="small" disabled>
+                    <Favorite fontSize="small" />
+                  </IconButton>
+                  <Typography variant="caption" color="text.secondary">
+                    {post.likes?.length || 0}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           </Grid>

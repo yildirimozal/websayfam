@@ -7,7 +7,6 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ReactNode, useState } from 'react';
 import { ThemeContextProvider, useTheme } from '../theme/ThemeContext';
-import ThemeSwitcher from './ThemeSwitcher';
 
 function EmotionCache({ children }: { children: ReactNode }) {
   const [{ cache, flush }] = useState(() => {
@@ -63,7 +62,6 @@ function ThemeWrapper({ children }: { children: ReactNode }) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {children}
-      <ThemeSwitcher />
     </ThemeProvider>
   );
 }

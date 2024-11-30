@@ -12,6 +12,8 @@ export interface IBlog extends Document {
   author: IAuthor;
   tags: string[];
   published: boolean;
+  views: number;
+  likes: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,9 +51,23 @@ const BlogSchema = new Schema({
   published: {
     type: Boolean,
     default: false
+  },
+  views: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  likes: {
+    type: [String],
+    default: [],
+    required: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  strict: true // Şemada tanımlanmayan alanların kaydedilmesini engelle
 });
 
-export default mongoose.models.Blog || mongoose.model<IBlog>('Blog', BlogSchema);
+// Koleksiyon adını küçük harfle ve çoğul olarak belirt
+const Blog = mongoose.models.Blog || mongoose.model<IBlog>('Blog', BlogSchema, 'blogs');
+
+export default Blog;

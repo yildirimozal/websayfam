@@ -96,8 +96,9 @@ export async function PATCH(
       );
     }
 
-    // Notu sadece sahibi güncelleyebilir
-    if (note.author.email !== session.user.email) {
+    // Admin veya not sahibi güncelleyebilir
+    const isAdmin = session.user.email === 'ozalyildirim@firat.edu.tr';
+    if (!isAdmin && note.author.email !== session.user.email) {
       return NextResponse.json(
         { error: 'Bu notu güncellemek için yetkiniz yok' },
         { status: 403 }
@@ -151,8 +152,9 @@ export async function DELETE(
       );
     }
 
-    // Notu sadece sahibi silebilir
-    if (note.author.email !== session.user.email) {
+    // Admin veya not sahibi silebilir
+    const isAdmin = session.user.email === 'ozalyildirim@firat.edu.tr';
+    if (!isAdmin && note.author.email !== session.user.email) {
       return NextResponse.json(
         { error: 'Bu notu silmek için yetkiniz yok' },
         { status: 403 }

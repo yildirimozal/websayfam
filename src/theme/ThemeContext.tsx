@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { createTheme } from '@mui/material/styles';
 import { classicTheme, modernDarkTheme, professionalLightTheme } from './themes';
 
@@ -8,7 +8,6 @@ export type ThemeName = 'classic' | 'modernDark' | 'professionalLight';
 
 interface ThemeContextType {
   currentTheme: ThemeName;
-  setTheme: (theme: ThemeName) => void;
   theme: any; // MUI theme object
 }
 
@@ -21,25 +20,11 @@ const themes = {
 };
 
 export function ThemeContextProvider({ children }: { children: React.ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>('classic');
-  const [theme, setThemeObject] = useState(() => createTheme(themes.classic));
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as ThemeName;
-    if (savedTheme && themes[savedTheme]) {
-      setCurrentTheme(savedTheme);
-      setThemeObject(createTheme(themes[savedTheme]));
-    }
-  }, []);
-
-  const setTheme = (newTheme: ThemeName) => {
-    setCurrentTheme(newTheme);
-    setThemeObject(createTheme(themes[newTheme]));
-    localStorage.setItem('theme', newTheme);
-  };
+  const [currentTheme] = useState<ThemeName>('professionalLight');
+  const [theme] = useState(() => createTheme(themes.professionalLight));
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, setTheme, theme }}>
+    <ThemeContext.Provider value={{ currentTheme, theme }}>
       {children}
     </ThemeContext.Provider>
   );

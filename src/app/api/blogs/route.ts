@@ -102,14 +102,22 @@ export async function POST(request: Request) {
       counter++;
     }
 
-    const blog = await Blog.create({
+    // Blog verilerini hazırla
+    const blogData = {
       ...data,
       slug,
       author: {
         name: session.user.name || 'Admin',
         email: session.user.email || 'admin@example.com'
-      }
-    });
+      },
+      likes: [], // Boş likes array'i ekle
+      views: 0,  // Başlangıç görüntülenme sayısı
+      published: data.published || false
+    };
+
+    console.log('Blog API: Oluşturulacak blog verisi:', blogData);
+
+    const blog = await Blog.create(blogData);
 
     console.log('Blog API: Blog başarıyla oluşturuldu:', blog._id);
     return NextResponse.json(blog, { status: 201 });

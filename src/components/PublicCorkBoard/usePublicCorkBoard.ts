@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Note, Author, Comment } from './types';
+import { Note } from './types';
 
 export const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
@@ -63,7 +63,10 @@ export const usePublicCorkBoard = () => {
   const canMoveNote = useCallback((note: Note) => {
     if (!session?.user?.email) return false;
     const isAdmin = session.user.email === 'ozalyildirim@firat.edu.tr';
-    return isAdmin || session.user.email === note.author?.email;
+    // Admin tüm notları sürükleyebilir
+    if (isAdmin) return true;
+    // Diğer kullanıcılar sadece kendi notlarını sürükleyebilir
+    return session.user.email === note.author?.email;
   }, [session]);
 
   const handleAddNote = async (content: string, type: 'note' | 'image'): Promise<void> => {
@@ -156,17 +159,17 @@ export const usePublicCorkBoard = () => {
   };
 
   const handleUpdateNotePosition = async (noteId: string, position: { x: number; y: number }): Promise<void> => {
-    // Yerel state'i hemen güncelle
-    setNotes(prevNotes => 
-      prevNotes.map(note => 
-        note.id === noteId 
-          ? { ...note, position }
-          : note
-      )
-    );
-
-    // API'ye gönder
     try {
+      // Yerel state'i hemen güncelle
+      setNotes(prevNotes => 
+        prevNotes.map(note => 
+          note.id === noteId 
+            ? { ...note, position }
+            : note
+        )
+      );
+
+      // API'ye gönder
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

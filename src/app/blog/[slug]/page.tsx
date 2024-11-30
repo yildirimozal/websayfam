@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, Container, Typography, Avatar, Chip, useTheme, Divider, CircularProgress } from '@mui/material';
-import { AccessTime } from '@mui/icons-material';
-import { useParams } from 'next/navigation';
+import { Box, Container, Typography, Avatar, Chip, useTheme, Divider, CircularProgress, Button } from '@mui/material';
+import { AccessTime, Home } from '@mui/icons-material';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import BlogInteractions from '@/components/BlogInteractions';
 
 const ReactMarkdown = dynamic(() => import('react-markdown'), {
   ssr: false,
@@ -19,6 +20,8 @@ interface BlogPost {
   tags: string[];
   category: string;
   published: boolean;
+  views: number;
+  likes: string[];
   createdAt: string;
   author: {
     name: string;
@@ -29,29 +32,35 @@ interface BlogPost {
 export default function BlogPost() {
   const theme = useTheme();
   const params = useParams();
+  const router = useRouter();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBlogPost = async () => {
+      if (!params.slug) return;
+
       try {
+        console.log('Blog yazısı yükleniyor... Slug:', params.slug);
         const response = await fetch(`/api/blogs?slug=${params.slug}`);
+        
         if (!response.ok) {
           throw new Error('Blog yazısı yüklenirken hata oluştu');
         }
+        
         const data = await response.json();
+        console.log('Blog yazısı yanıtı:', data);
         setPost(data);
       } catch (err) {
+        console.error('Blog yazısı yükleme hatası:', err);
         setError(err instanceof Error ? err.message : 'Beklenmeyen bir hata oluştu');
       } finally {
         setLoading(false);
       }
     };
 
-    if (params.slug) {
-      fetchBlogPost();
-    }
+    fetchBlogPost();
   }, [params.slug]);
 
   if (loading) {
@@ -80,9 +89,39 @@ export default function BlogPost() {
     );
   }
 
+  const {
+    _id,
+    title,
+    content,
+    tags,
+    views,
+    likes,
+    createdAt,
+    author
+  } = post;
+
   return (
     <Box sx={{ py: { xs: 4, md: 6 } }}>
       <Container maxWidth="md">
+        {/* Ana Sayfa Butonu */}
+        <Box sx={{ mb: 4 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Home />}
+            onClick={() => router.push('/')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.common.white,
+              }
+            }}
+          >
+            Ana Sayfaya Dön
+          </Button>
+        </Box>
+
         {/* Yazar Bilgisi */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
           <Avatar 
@@ -103,11 +142,11 @@ export default function BlogPost() {
                 mb: 0.5
               }}
             >
-              {post.author.name}
+              {author.name}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                {new Date(post.createdAt).toLocaleDateString('tr-TR', {
+                {new Date(createdAt).toLocaleDateString('tr-TR', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -117,7 +156,7 @@ export default function BlogPost() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <AccessTime sx={{ fontSize: '1rem', color: theme.palette.text.secondary }} />
                 <Typography variant="body2" color="text.secondary">
-                  {Math.ceil(post.content.split(' ').length / 200)} dk okuma
+                  {Math.ceil(content.split(' ').length / 200)} dk okuma
                 </Typography>
               </Box>
             </Box>
@@ -135,12 +174,12 @@ export default function BlogPost() {
             fontSize: { xs: '2rem', md: '2.5rem' }
           }}
         >
-          {post.title}
+          {title}
         </Typography>
 
         {/* Etiketler */}
         <Box sx={{ mb: 4 }}>
-          {post.tags.map((tag) => (
+          {tags.map((tag) => (
             <Chip
               key={tag}
               label={tag}
@@ -201,7 +240,7 @@ export default function BlogPost() {
             fontStyle: 'italic',
             bgcolor: theme.palette.mode === 'dark' 
               ? 'rgba(144, 202, 249, 0.08)'
-              : 'rgba(25, 118, 210, 0.08)',
+              : 'rgba(25, 118, 210, 0.08)'
           },
           '& img': {
             maxWidth: '100%',
@@ -231,8 +270,15 @@ export default function BlogPost() {
             }
           }
         }}>
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+          <ReactMarkdown>{content}</ReactMarkdown>
         </Box>
+
+        {/* Blog Etkileşimleri */}
+        <BlogInteractions 
+          blogId={_id}
+          initialLikes={likes}
+          initialViews={views}
+        />
       </Container>
     </Box>
   );
