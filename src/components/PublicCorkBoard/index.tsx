@@ -158,27 +158,29 @@ const PublicCorkBoard = () => {
           </Box>
         ))}
 
-        <Fab
-          color="primary"
-          aria-label="add note"
-          onClick={() => setIsAddDialogOpen(true)}
-          sx={{
-            position: 'absolute',
-            right: 40,
-            bottom: 40,
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-            '&:hover': {
-              backgroundColor: theme.palette.primary.dark,
-            },
-            width: 56,
-            height: 56,
-            boxShadow: theme.shadows[8],
-            zIndex: 2,
-          }}
-        >
-          <AddIcon />
-        </Fab>
+        {session?.user && (
+          <Fab
+            color="primary"
+            aria-label="add note"
+            onClick={() => setIsAddDialogOpen(true)}
+            sx={{
+              position: 'absolute',
+              right: 40,
+              bottom: 40,
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.dark,
+              },
+              width: 56,
+              height: 56,
+              boxShadow: theme.shadows[8],
+              zIndex: 2,
+            }}
+          >
+            <AddIcon />
+          </Fab>
+        )}
 
         <AddNoteDialog
           open={isAddDialogOpen}
