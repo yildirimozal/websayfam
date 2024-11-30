@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/config';
 import { uploadToS3, getFileType } from '@/lib/s3';
 
-export async function POST(request: Request) {
+// Yeni route segment config yapısı
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
@@ -46,9 +50,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};

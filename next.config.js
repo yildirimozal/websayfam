@@ -1,12 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'vercel.app'],
+    domains: ['localhost', 'vercel.app', 'www.google.com'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**.vercel.app',
       },
+      {
+        protocol: 'https',
+        hostname: '**.google.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.greensboro.carolinavet.com',
+      }
     ],
   },
   typescript: {

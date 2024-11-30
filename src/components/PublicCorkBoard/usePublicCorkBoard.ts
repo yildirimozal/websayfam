@@ -1,16 +1,312 @@
 'use client';
 
-import { useContext } from 'react';
-import { PublicCorkBoardContext } from './PublicCorkBoardProvider';
+import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { Note, Author, Comment } from './types';
+
+export const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
 export const usePublicCorkBoard = () => {
-  const context = useContext(PublicCorkBoardContext);
-  
-  if (!context) {
-    throw new Error('usePublicCorkBoard must be used within a PublicCorkBoardProvider');
-  }
-  
-  return context;
-};
+  const { data: session, status } = useSession();
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [activeNote, setActiveNote] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default usePublicCorkBoard;
+  const normalizeNote = useCallback((note: any): Note => {
+    return {
+      id: note.id || note._id || generateTempId(),
+      content: note.content || '',
+      type: note.type || 'note',
+      author: note.author || null,
+      position: note.position && typeof note.position.x === 'number' && typeof note.position.y === 'number' 
+        ? note.position 
+        : { x: 50, y: 50 },
+      size: note.size && typeof note.size.width === 'number' && typeof note.size.height === 'number'
+        ? note.size
+        : { width: 200, height: 200 },
+      rotation: typeof note.rotation === 'number' ? note.rotation : 0,
+      likes: Array.isArray(note.likes) ? note.likes : [],
+      comments: Array.isArray(note.comments) ? note.comments : [],
+      createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
+      updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date()
+    };
+  }, []);
+
+  const fetchNotes = useCallback(async () => {
+    try {
+      const response = await fetch('/api/public-notes');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      const normalizedNotes = Array.isArray(data) ? data.map(normalizeNote) : [];
+      setNotes(normalizedNotes);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu';
+      setError(`Notları yüklerken hata: ${errorMessage}`);
+      console.error('Notları yükleme hatası:', err);
+    }
+  }, [normalizeNote]);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  const canEditNote = useCallback((note: Note) => {
+    if (!session?.user?.email) return false;
+    const isAdmin = session.user.email === 'ozalyildirim@firat.edu.tr';
+    return isAdmin || session.user.email === note.author?.email;
+  }, [session]);
+
+  const canMoveNote = useCallback((note: Note) => {
+    if (!session?.user?.email) return false;
+    const isAdmin = session.user.email === 'ozalyildirim@firat.edu.tr';
+    return isAdmin || session.user.email === note.author?.email;
+  }, [session]);
+
+  const handleAddNote = async (content: string, type: 'note' | 'image'): Promise<void> => {
+    if (!session?.user) {
+      setError('Not eklemek için giriş yapmalısınız');
+      return;
+    }
+
+    if (!session.user.name || !session.user.email) {
+      setError('Kullanıcı bilgileri eksik');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/public-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          type,
+          position: { x: 50, y: 50 },
+          size: { width: 200, height: 200 },
+          rotation: Math.random() * 10 - 5,
+          author: {
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image || '/default-avatar.png'
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Not eklenemedi');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Not ekleme hatası:', err);
+      setError('Not eklenirken bir hata oluştu');
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string): Promise<void> => {
+    if (!session?.user) {
+      setError('Not silmek için giriş yapmalısınız');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Not silinemedi');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Not silme hatası:', err);
+      setError('Not silinirken bir hata oluştu');
+    }
+  };
+
+  const handleUpdateNote = async (noteId: string, content: string): Promise<void> => {
+    if (!session?.user) {
+      setError('Not güncellemek için giriş yapmalısınız');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Not güncellenemedi');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Not güncelleme hatası:', err);
+      setError('Not güncellenirken bir hata oluştu');
+    }
+  };
+
+  const handleUpdateNotePosition = async (noteId: string, position: { x: number; y: number }): Promise<void> => {
+    // Yerel state'i hemen güncelle
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId 
+          ? { ...note, position }
+          : note
+      )
+    );
+
+    // API'ye gönder
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Not konumu güncellenemedi');
+      }
+    } catch (err) {
+      console.error('Not konumu güncelleme hatası:', err);
+      setError('Not konumu güncellenirken bir hata oluştu');
+      // Hata durumunda orijinal notları geri yükle
+      await fetchNotes();
+    }
+  };
+
+  const handleUpdateNoteSize = async (noteId: string, size: { width: number; height: number }): Promise<void> => {
+    if (!session?.user) {
+      setError('Not boyutunu güncellemek için giriş yapmalısınız');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ size })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Not boyutu güncellenemedi');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Not boyutu güncelleme hatası:', err);
+      setError('Not boyutu güncellenirken bir hata oluştu');
+    }
+  };
+
+  const handleLikeToggle = async (noteId: string): Promise<void> => {
+    if (!session?.user) {
+      setError('Beğenmek için giriş yapmalısınız');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}/like`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Beğeni işlemi başarısız');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Beğeni hatası:', err);
+      setError('Beğeni işlemi sırasında bir hata oluştu');
+    }
+  };
+
+  const handleCommentAdd = async (noteId: string, content: string): Promise<void> => {
+    if (!session?.user) {
+      setError('Yorum yapmak için giriş yapmalısınız');
+      return;
+    }
+
+    if (!session.user.name || !session.user.email) {
+      setError('Kullanıcı bilgileri eksik');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Yorum eklenemedi');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Yorum ekleme hatası:', err);
+      setError('Yorum eklenirken bir hata oluştu');
+    }
+  };
+
+  const handleCommentDelete = async (noteId: string, commentId: string): Promise<void> => {
+    if (!session?.user) {
+      setError('Yorum silmek için giriş yapmalısınız');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/public-notes/${noteId}/comment/${commentId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Yorum silinemedi');
+      }
+
+      await fetchNotes();
+    } catch (err) {
+      console.error('Yorum silme hatası:', err);
+      setError('Yorum silinirken bir hata oluştu');
+    }
+  };
+
+  return {
+    session,
+    notes,
+    setNotes,
+    activeNote,
+    setActiveNote,
+    dragOffset,
+    setDragOffset,
+    isResizing,
+    setIsResizing,
+    error,
+    setError,
+    canEditNote,
+    canMoveNote,
+    handleAddNote,
+    handleDeleteNote,
+    handleUpdateNote,
+    handleUpdateNotePosition,
+    handleUpdateNoteSize,
+    handleLikeToggle,
+    handleCommentAdd,
+    handleCommentDelete,
+  };
+};

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Grid, useTheme } from '@mui/material';
-import PublicCorkBoard from '../../components/PublicCorkBoard';
+import PublicCorkBoard from '../../components/PublicCorkBoard/index';
 import ChatPanel from '../../components/ChatPanel';
 import Hero from '../../components/Hero';
 

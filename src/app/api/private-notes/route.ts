@@ -25,10 +25,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.isAdmin) {
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Oturum açmanız gerekiyor' },
+        { status: 401 }
+      );
+    }
+
+    if (!session.user?.isAdmin) {
       return NextResponse.json(
         { error: 'Bu işlem için yetkiniz yok' },
         { status: 403 }
+      );
+    }
+
+    if (!session.user?.id) {
+      return NextResponse.json(
+        { error: 'Kullanıcı ID bulunamadı' },
+        { status: 400 }
       );
     }
 

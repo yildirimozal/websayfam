@@ -14,8 +14,9 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async session({ session, user }: any) {
-      if (session?.user?.email) {
-        session.user.isAdmin = adminEmails.includes(session.user.email);
+      if (session?.user) {
+        session.user.id = user.id;
+        session.user.isAdmin = adminEmails.includes(session.user.email || '');
       }
       return session;
     },

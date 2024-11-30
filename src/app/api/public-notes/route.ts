@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import PublicNote from '@/models/PublicNote';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/config';
 
 export async function GET() {
   try {
-    console.log('GET /api/public-notes - Connecting to database...');
     await connectToDatabase();
-    console.log('Database connection successful');
 
-    console.log('Fetching public notes...');
     const notes = await PublicNote.find().sort({ createdAt: -1 });
-    console.log(`Found ${notes.length} public notes`);
 
     return NextResponse.json(notes);
   } catch (error) {
@@ -24,24 +22,41 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    console.log('POST /api/public-notes - Connecting to database...');
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Oturum açmanız gerekiyor' },
+        { status: 401 }
+      );
+    }
+
     await connectToDatabase();
-    console.log('Database connection successful');
 
     const body = await request.json();
-    console.log('Received note data:', body);
 
-    const note = new PublicNote(body);
-    console.log('Created new note instance:', note);
+    // Eksik alanları kontrol et ve varsayılan değerler ekle
+    const noteData = {
+      ...body,
+      position: body.position || { x: 50, y: 50 },
+      size: body.size || { width: 200, height: 200 },
+      likes: body.likes || [],
+      comments: body.comments || [],
+      author: {
+        name: session.user?.name || 'Anonim Kullanıcı',
+        email: session.user?.email || 'anonymous@example.com',
+        image: session.user?.image || '/default-avatar.png'
+      }
+    };
 
+    const note = new PublicNote(noteData);
     await note.save();
-    console.log('Note saved successfully:', note._id);
 
     return NextResponse.json(note);
   } catch (error) {
     console.error('Error in POST /api/public-notes:', error);
     return NextResponse.json(
-      { error: 'Failed to create public note' },
+      { error: 'Failed to create public note', details: error instanceof Error ? error.message : 'Bilinmeyen hata' },
       { status: 500 }
     );
   }
