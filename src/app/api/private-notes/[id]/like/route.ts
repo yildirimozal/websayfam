@@ -73,11 +73,12 @@ export async function GET(
       );
     }
 
+    // Giriş yapmayan kullanıcılar için isLiked false olacak
     const session = await getServerSession(authOptions);
     const isLiked = session?.user?.id ? note.likes.includes(session.user.id) : false;
 
+    // Beğeni sayısını ve durumunu herkes görebilir
     return NextResponse.json({
-      likes: note.likes,
       likeCount: note.likes.length,
       isLiked
     });

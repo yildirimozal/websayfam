@@ -143,11 +143,17 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   const handleCommentClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    setIsViewCommentsDialogOpen(true);
+  };
+
+  const handleAddCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!session?.user) {
-      await signIn('google', { callbackUrl: window.location.href });
+      signIn('google', { callbackUrl: window.location.href });
       return;
     }
-    setIsViewCommentsDialogOpen(true);
+    setIsViewCommentsDialogOpen(false);
+    setIsCommentDialogOpen(true);
   };
 
   const formatDate = (date: Date) => {
@@ -168,7 +174,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
         onResize={onResize}
         onResizeStop={onResizeStop}
         minConstraints={[150, 100]}
-        maxConstraints={[400, 400]}
+        maxConstraints={[800, 800]}
         resizeHandles={['se']}
         draggableOpts={{ enableUserSelectHack: false }}
       >
@@ -269,7 +275,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 alt="Pano resmi"
                 fill
                 style={{ 
-                  objectFit: 'cover',
+                  objectFit: 'contain',
                   pointerEvents: 'none',
                 }}
               />
@@ -357,11 +363,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
             variant="contained"
             size="small"
             sx={{ float: 'right' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsViewCommentsDialogOpen(false);
-              setIsCommentDialogOpen(true);
-            }}
+            onClick={handleAddCommentClick}
           >
             Yorum Ekle
           </Button>

@@ -126,6 +126,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       }
 
       const data = await response.json();
+      console.log('Uploaded image URL:', data.url);
       setContent(data.url);
       setType('image');
     } catch (error) {
@@ -171,6 +172,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       }
 
       const data = await response.json();
+      console.log('Uploaded image URL:', data.url);
       setContent(data.url);
       setType('image');
     } catch (error) {
@@ -238,6 +240,18 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
             >
               {isUploading ? (
                 <CircularProgress size={24} />
+              ) : content ? (
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                  <img
+                    src={content}
+                    alt="Yüklenen resim"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '300px',
+                      objectFit: 'contain'
+                    }}
+                  />
+                </Box>
               ) : (
                 <>
                   <CloudUploadIcon sx={{ fontSize: 48, color: '#666' }} />
@@ -254,19 +268,6 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
               <Typography color="error" variant="caption" sx={{ mt: 1 }}>
                 {uploadError}
               </Typography>
-            )}
-            {content && type === 'image' && (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <img
-                  src={content}
-                  alt="Yüklenen resim"
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '200px',
-                    objectFit: 'contain'
-                  }}
-                />
-              </Box>
             )}
           </Box>
         ) : (

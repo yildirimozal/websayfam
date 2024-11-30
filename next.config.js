@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'vercel.app', 'www.google.com'],
+    domains: ['localhost', 'vercel.app', 'www.google.com', 'ozalsite.s3.eu-central-1.amazonaws.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -18,6 +18,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '**.s3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ozalsite.s3.eu-central-1.amazonaws.com',
       }
     ],
   },

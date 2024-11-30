@@ -41,6 +41,8 @@ export async function POST(
 
     const comment = {
       userId: session.user.id,
+      userName: session.user.name || 'Anonim',
+      userImage: session.user.image || null,
       content,
       createdAt: new Date()
     };
@@ -76,8 +78,13 @@ export async function GET(
       );
     }
 
+    // Yorumları ve yorum sayısını herkes görebilir
     return NextResponse.json({
-      comments: note.comments,
+      comments: note.comments.map(comment => ({
+        ...comment,
+        userName: comment.userName || 'Anonim',
+        createdAt: comment.createdAt
+      })),
       commentCount: note.comments.length
     });
   } catch (error) {

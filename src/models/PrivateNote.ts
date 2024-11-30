@@ -2,6 +2,8 @@ import mongoose, { Schema } from 'mongoose';
 
 interface IComment {
   userId: string;
+  userName: string;
+  userImage?: string | null;
   content: string;
   createdAt: Date;
 }
@@ -32,6 +34,14 @@ const commentSchema = new Schema<IComment>({
   userId: {
     type: String,
     required: true
+  },
+  userName: {
+    type: String,
+    required: true
+  },
+  userImage: {
+    type: String,
+    default: null
   },
   content: {
     type: String,
