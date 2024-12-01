@@ -34,7 +34,15 @@ interface Message {
     email: string;
     image?: string;
   };
-  quotedMessage?: Message;
+  quotedMessage?: {
+    _id: string;
+    content: string;
+    author: {
+      name: string;
+      email: string;
+      image?: string;
+    };
+  };
   createdAt: string;
   reactions: Array<{
     emoji: string;
@@ -299,10 +307,10 @@ const ChatPanel: React.FC = () => {
                   mb: 0.5,
                 }}>
                   <Typography variant="caption" color="primary" sx={{ fontWeight: 600 }}>
-                    @{message.quotedMessage.author.name}
+                    @{message.quotedMessage.author?.name || 'Silinmiş Mesaj'}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {message.quotedMessage.content}
+                    {message.quotedMessage.content || 'Bu mesaj silinmiş'}
                   </Typography>
                 </Box>
               )}
