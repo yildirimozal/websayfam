@@ -218,7 +218,7 @@ const Hero = () => {
           sx={{ 
             position: 'absolute',
             top: 8,
-            right: 8,
+            left: 8,
             zIndex: 2,
             color: theme.palette.primary.main,
             backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',

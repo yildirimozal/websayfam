@@ -17,10 +17,13 @@ import {
   Typography,
   Box,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Alert
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Login as LoginIcon } from '@mui/icons-material';
 import { Note, Comment, CommentDialogProps } from '../types';
+import { useSession } from 'next-auth/react';
+import NextLink from 'next/link';
 
 const CommentDialog: React.FC<CommentDialogProps> = ({
   note,
@@ -33,6 +36,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
   const theme = useTheme();
   const isXsScreen = useMediaQuery('(max-width:320px)');
   const isSmScreen = useMediaQuery('(max-width:375px)');
+  const { data: session } = useSession();
 
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -173,21 +177,40 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
             ))
           )}
         </List>
-        <TextField
-          fullWidth
-          multiline
-          rows={isXsScreen ? 2 : 3}
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Yorumunuzu yazın..."
-          variant="outlined"
-          disabled={isSubmitting}
-          sx={{
-            '& .MuiInputBase-input': {
-              fontSize: { xs: '0.875rem', sm: '1rem' }
+        {session ? (
+          <TextField
+            fullWidth
+            multiline
+            rows={isXsScreen ? 2 : 3}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Yorumunuzu yazın..."
+            variant="outlined"
+            disabled={isSubmitting}
+            sx={{
+              '& .MuiInputBase-input': {
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }
+            }}
+          />
+        ) : (
+          <Alert 
+            severity="info"
+            icon={<LoginIcon />}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                component={NextLink}
+                href="/auth/signin"
+              >
+                Giriş Yap
+              </Button>
             }
-          }}
-        />
+          >
+            Yorum yapabilmek için giriş yapmalısınız
+          </Alert>
+        )}
       </DialogContent>
       <DialogActions sx={{ 
         p: { xs: 2, sm: 3 },
@@ -204,18 +227,20 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
         >
           Kapat
         </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={!newComment.trim() || isSubmitting}
-          fullWidth={isXsScreen}
-          size={isSmScreen ? "small" : "medium"}
-          sx={{
-            fontSize: { xs: '0.75rem', sm: '0.875rem' }
-          }}
-        >
-          Yorum Yap
-        </Button>
+        {session && (
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={!newComment.trim() || isSubmitting}
+            fullWidth={isXsScreen}
+            size={isSmScreen ? "small" : "medium"}
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }}
+          >
+            Yorum Yap
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

@@ -15,7 +15,7 @@ const kalam = Kalam({
 });
 
 export const metadata: Metadata = {
-  title: "Akademik Portfolio",
+  title: "Ozal Yildirim",
   description: "Akademik çalışmalar ve yapay zeka güncellemeleri",
 };
 

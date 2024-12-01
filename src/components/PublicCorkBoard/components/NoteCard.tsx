@@ -8,9 +8,12 @@ import {
   Edit as EditIcon,
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,
-  Comment as CommentIcon
+  Comment as CommentIcon,
+  Login as LoginIcon
 } from '@mui/icons-material';
 import type { Note } from '../types';
+import { useSession } from 'next-auth/react';
+import NextLink from 'next/link';
 
 interface NoteCardProps {
   note: Note;
@@ -52,12 +55,65 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onDragStop,
   onClick
 }) => {
+  const { data: session } = useSession();
+  
   const handleClick = (e: React.MouseEvent) => {
     // Eğer tıklama butonlardan geldiyse detay görünümünü açma
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
     onClick?.();
+  };
+
+  const renderLikeButton = () => {
+    return (
+      <Tooltip title={isLiked ? "Beğeniyi kaldır" : "Beğen"}>
+        <IconButton
+          size="small"
+          onClick={onLikeToggle}
+          color={isLiked ? "primary" : "default"}
+        >
+          <Badge
+            badgeContent={note.likes.length}
+            color="primary"
+            sx={{
+              '& .MuiBadge-badge': {
+                right: 5,
+                top: 5,
+                border: `2px solid ${note.color}`
+              }
+            }}
+          >
+            {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+          </Badge>
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  const renderCommentButton = () => {
+    return (
+      <Tooltip title={session ? "Yorumlar" : "Yorumları görüntüle (yorum yapmak için giriş yapın)"}>
+        <IconButton
+          size="small"
+          onClick={onCommentClick}
+        >
+          <Badge
+            badgeContent={note.comments.length}
+            color="primary"
+            sx={{
+              '& .MuiBadge-badge': {
+                right: 5,
+                top: 5,
+                border: `2px solid ${note.color}`
+              }
+            }}
+          >
+            <CommentIcon />
+          </Badge>
+        </IconButton>
+      </Tooltip>
+    );
   };
 
   return (
@@ -212,48 +268,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
           }}
         >
           <Box>
-            <Tooltip title={isLiked ? "Beğeniyi kaldır" : "Beğen"}>
-              <Badge
-                badgeContent={note.likes.length}
-                color="primary"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    right: 5,
-                    top: 5,
-                    border: `2px solid ${note.color}`
-                  }
-                }}
-              >
-                <IconButton
-                  size="small"
-                  onClick={onLikeToggle}
-                  color={isLiked ? "primary" : "default"}
-                >
-                  {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                </IconButton>
-              </Badge>
-            </Tooltip>
-            <Tooltip title="Yorumlar">
-              <Badge
-                badgeContent={note.comments.length}
-                color="primary"
-                sx={{
-                  ml: 1,
-                  '& .MuiBadge-badge': {
-                    right: 5,
-                    top: 5,
-                    border: `2px solid ${note.color}`
-                  }
-                }}
-              >
-                <IconButton
-                  size="small"
-                  onClick={onCommentClick}
-                >
-                  <CommentIcon />
-                </IconButton>
-              </Badge>
-            </Tooltip>
+            {renderLikeButton()}
+            {renderCommentButton()}
           </Box>
 
           {canEdit && (

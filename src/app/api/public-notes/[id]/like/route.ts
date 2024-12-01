@@ -1,30 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import PublicNote from '@/models/PublicNote';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/config';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Oturum açmanız gerekiyor' },
-        { status: 401 }
-      );
-    }
-
-    if (!session.user?.id) {
-      return NextResponse.json(
-        { error: 'Kullanıcı ID bulunamadı' },
-        { status: 400 }
-      );
-    }
-
     await connectToDatabase();
 
     const note = await PublicNote.findById(params.id);
@@ -36,15 +18,9 @@ export async function POST(
       );
     }
 
-    const userId = session.user.id;
-    const likeIndex = note.likes.indexOf(userId);
-
-    if (likeIndex === -1) {
-      note.likes.push(userId);
-    } else {
-      note.likes.splice(likeIndex, 1);
-    }
-
+    // Anonim beğeni için rastgele bir ID oluştur
+    const anonymousId = Math.random().toString(36).substring(7);
+    note.likes.push(anonymousId);
     await note.save();
 
     return NextResponse.json({

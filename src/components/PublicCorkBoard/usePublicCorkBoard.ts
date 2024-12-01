@@ -26,6 +26,7 @@ export const usePublicCorkBoard = () => {
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [canAddNote, setCanAddNote] = useState(true);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const normalizeNote = useCallback((note: any): Note => {
     return {
@@ -83,10 +84,12 @@ export const usePublicCorkBoard = () => {
   }, [normalizeNote]);
 
   useEffect(() => {
+    // İlk yükleme için hemen fetch yap
     fetchNotes();
+    setIsInitialLoad(false);
     
-    // Her 5 saniyede bir sayaç bilgisini güncelle
-    const interval = setInterval(fetchNotes, 5000);
+    // İlk yüklemeden sonra 2 saniyelik interval ile güncelle
+    const interval = setInterval(fetchNotes, 2000);
     
     return () => clearInterval(interval);
   }, [fetchNotes]);
@@ -278,11 +281,6 @@ export const usePublicCorkBoard = () => {
   };
 
   const handleLikeToggle = async (noteId: string): Promise<void> => {
-    if (!session?.user) {
-      setError('Beğenmek için giriş yapmalısınız');
-      return;
-    }
-
     try {
       const response = await fetch(`/api/public-notes/${noteId}/like`, {
         method: 'POST'
