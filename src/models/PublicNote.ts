@@ -15,7 +15,8 @@ interface IComment {
 
 interface IPublicNote {
   type: 'note' | 'image';
-  content: string;
+  content?: string;
+  url?: string;
   position: {
     x: number;
     y: number;
@@ -55,22 +56,23 @@ const SystemTimerSchema = new Schema({
 export const SystemTimer = mongoose.models.SystemTimer || mongoose.model('SystemTimer', SystemTimerSchema);
 
 const PublicNoteSchema = new Schema({
-  type: String,
+  type: { type: String, required: true, enum: ['note', 'image'] },
   content: String,
+  url: String,
   position: {
-    x: Number,
-    y: Number
+    x: { type: Number, required: true },
+    y: { type: Number, required: true }
   },
   size: {
-    width: Number,
-    height: Number
+    width: { type: Number, required: true },
+    height: { type: Number, required: true }
   },
-  rotation: Number,
-  color: String,
-  fontFamily: String,
+  rotation: { type: Number, default: 0 },
+  color: { type: String, default: '#fff9c4' },
+  fontFamily: { type: String, default: 'Roboto' },
   author: {
-    name: String,
-    email: String,
+    name: { type: String, required: true },
+    email: { type: String, required: true },
     image: String
   },
   likes: [String],
@@ -87,7 +89,6 @@ const PublicNoteSchema = new Schema({
   }]
 }, {
   timestamps: true,
-  strict: false,
   minimize: false
 });
 
@@ -104,6 +105,14 @@ PublicNoteSchema.virtual('commentCount').get(function() {
 PublicNoteSchema.pre('save', function(next) {
   if (!this.color) this.color = '#fff9c4';
   if (!this.fontFamily) this.fontFamily = 'Roboto';
+  if (this.type === 'image' && !this.url) {
+    next(new Error('Image notes must have a URL'));
+    return;
+  }
+  if (this.type === 'note' && !this.content) {
+    next(new Error('Text notes must have content'));
+    return;
+  }
   next();
 });
 

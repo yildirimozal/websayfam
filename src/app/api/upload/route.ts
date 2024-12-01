@@ -44,21 +44,50 @@ export async function POST(request: Request) {
       );
     }
 
+    // AWS kimlik bilgilerini kontrol et
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_S3_BUCKET || !process.env.AWS_REGION) {
+      console.error('Missing AWS credentials');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
     try {
       const buffer = Buffer.from(await file.arrayBuffer());
       const url = await uploadToS3(buffer, file.type, isPublic);
+      
+      if (!url) {
+        throw new Error('Failed to get upload URL');
+      }
+
       return NextResponse.json({ url });
     } catch (uploadError) {
       console.error('S3 upload error:', uploadError);
+      
+      // Daha detaylı hata mesajı
+      let errorMessage = 'Failed to upload to S3';
+      if (uploadError instanceof Error) {
+        errorMessage = `${errorMessage}: ${uploadError.message}`;
+        console.error('Error stack:', uploadError.stack);
+      }
+
       return NextResponse.json(
-        { error: 'Failed to upload to S3', details: uploadError instanceof Error ? uploadError.message : 'Unknown error' },
+        { error: errorMessage },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error('Error uploading file:', error);
+    
+    let errorMessage = 'Failed to process upload request';
+    if (error instanceof Error) {
+      errorMessage = `${errorMessage}: ${error.message}`;
+      console.error('Error stack:', error.stack);
+    }
+
     return NextResponse.json(
-      { error: 'Failed to process upload request', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

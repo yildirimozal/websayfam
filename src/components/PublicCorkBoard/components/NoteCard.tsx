@@ -241,7 +241,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
               }}
             >
               <img
-                src={note.content}
+                src={note.url}
                 alt={`${note.author?.name}'in resmi`}
                 style={{
                   maxWidth: '100%',
@@ -250,7 +250,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   display: 'block'
                 }}
                 onError={(e) => {
-                  console.error('Resim yüklenemedi:', note.content);
+                  console.error('Resim yüklenemedi:', note.url);
                   e.currentTarget.style.display = 'none';
                 }}
               />

@@ -137,7 +137,8 @@ export async function POST(request: Request) {
 
     const noteData = {
       type: body.type || 'note',
-      content: body.content,
+      content: body.type === 'note' ? body.content : undefined,
+      url: body.type === 'image' ? body.content : undefined,
       position: body.position || { x: 50, y: 50 },
       size: body.size || { width: 200, height: 200 },
       rotation: body.rotation || 0,
