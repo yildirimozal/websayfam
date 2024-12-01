@@ -12,6 +12,7 @@ import {
   useTheme,
   CircularProgress,
   Button,
+  Badge,
 } from '@mui/material';
 import { 
   Send as SendIcon,
@@ -20,6 +21,7 @@ import {
   EmojiEmotions as EmojiIcon,
   Close as CloseIcon,
   Reply as ReplyIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { useSession } from 'next-auth/react';
@@ -49,6 +51,7 @@ const ChatPanel: React.FC = () => {
   const [quotedMessage, setQuotedMessage] = useState<Message | null>(null);
   const [emojiPickerAnchor, setEmojiPickerAnchor] = useState<null | HTMLElement>(null);
   const [reactionMessage, setReactionMessage] = useState<Message | null>(null);
+  const [onlineCount, setOnlineCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -57,9 +60,31 @@ const ChatPanel: React.FC = () => {
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const messageInterval = setInterval(fetchMessages, 5000);
+
+    // Online durumunu güncelle ve sayıyı al
+    const updateOnlineStatus = async () => {
+      try {
+        const response = await fetch('/api/online', {
+          method: session ? 'POST' : 'GET'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setOnlineCount(data.count);
+        }
+      } catch (error) {
+        console.error('Online durum güncellenirken hata:', error);
+      }
+    };
+
+    updateOnlineStatus();
+    const onlineInterval = setInterval(updateOnlineStatus, 30000); // Her 30 saniyede bir güncelle
+
+    return () => {
+      clearInterval(messageInterval);
+      clearInterval(onlineInterval);
+    };
+  }, [session]);
 
   useEffect(() => {
     scrollToBottom();
@@ -161,6 +186,19 @@ const ChatPanel: React.FC = () => {
         gap: 1,
       }}>
         <Typography variant="h6" sx={{ flex: 1, fontWeight: 600 }}>Mesajlar</Typography>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1,
+          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+          padding: '4px 12px',
+          borderRadius: 16,
+        }}>
+          <PersonIcon sx={{ fontSize: '1rem', color: theme.palette.success.main }} />
+          <Typography variant="body2" color="text.secondary">
+            {onlineCount} çevrimiçi
+          </Typography>
+        </Box>
         {!session && (
           <Button 
             variant="contained" 
