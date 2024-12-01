@@ -130,7 +130,7 @@ const Hero = () => {
         sx={{
           position: 'absolute',
           top: 8,
-          right: isMobile ? 48 : 8,
+          right: isMobile ? 28 : 8,
           display: 'flex',
           gap: 1,
           zIndex: 2,

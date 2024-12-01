@@ -1,34 +1,44 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const newsSchema = new mongoose.Schema({
+export interface INews extends Document {
+  title: string;
+  description: string;
+  url: string;
+  imageUrl: string;
+  publishedAt: Date;
+  source: string;
+  createdAt: Date;
+}
+
+const NewsSchema = new Schema<INews>({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   url: {
     type: String,
-    required: true
+    required: true,
   },
   imageUrl: {
     type: String,
-    required: true
+    required: true,
   },
   publishedAt: {
     type: Date,
-    required: true
+    required: true,
   },
   source: {
     type: String,
-    required: true
+    required: true,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-export const News = mongoose.models.News || mongoose.model('News', newsSchema);
+export const News = mongoose.models.News || mongoose.model<INews>('News', NewsSchema);
