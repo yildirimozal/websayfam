@@ -13,6 +13,8 @@ import {
   Link,
   CircularProgress,
   Fade,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { NewReleases, Launch } from '@mui/icons-material';
 
@@ -38,12 +40,20 @@ const StyledListItem = styled(ListItem)(({ theme }) => ({
   minHeight: '150px',
   display: 'flex',
   gap: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+    minHeight: 'auto',
+    gap: theme.spacing(1),
+  },
 }));
 
 const NewsContent = styled(Box)(({ theme }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
+  [theme.breakpoints.down('sm')]: {
+    order: 2,
+  },
 }));
 
 const NewsImage = styled('img')(({ theme }) => ({
@@ -52,18 +62,26 @@ const NewsImage = styled('img')(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
   objectFit: 'cover',
   flexShrink: 0,
+  [theme.breakpoints.down('sm')]: {
+    width: '100%',
+    height: '180px',
+    order: 1,
+  },
 }));
 
-const NewsTitle = styled(Typography)({
+const NewsTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 600,
   fontSize: '1rem',
   marginBottom: '4px',
   display: 'flex',
   alignItems: 'flex-start',
   gap: '8px',
-});
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.9rem',
+  },
+}));
 
-const NewsDescription = styled(Typography)({
+const NewsDescription = styled(Typography)(({ theme }) => ({
   fontSize: '0.875rem',
   marginBottom: '4px',
   display: '-webkit-box',
@@ -71,15 +89,23 @@ const NewsDescription = styled(Typography)({
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-});
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.8rem',
+    WebkitLineClamp: 3,
+  },
+}));
 
-const NewsDate = styled(Typography)({
+const NewsDate = styled(Typography)(({ theme }) => ({
   fontSize: '0.75rem',
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
   marginTop: 'auto',
-});
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.7rem',
+    flexWrap: 'wrap',
+  },
+}));
 
 const DISPLAY_COUNT = 3;
 const ROTATION_INTERVAL = 8000; // 8 saniye
@@ -87,6 +113,8 @@ const FADE_DURATION = 1000; // 1 saniye
 const DEFAULT_IMAGE = 'https://via.placeholder.com/300x200?text=AI+News';
 
 const AINewsFeed: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [allNews, setAllNews] = useState<NewsItem[]>([]);
   const [displayedNews, setDisplayedNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,10 +220,17 @@ const AINewsFeed: React.FC = () => {
         }
       }}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+      <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 1
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="h5">
+            <Typography variant={isMobile ? "h6" : "h5"}>
               AI Güncel Haberler
             </Typography>
           </Box>

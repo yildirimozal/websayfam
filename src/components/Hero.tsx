@@ -247,7 +247,7 @@ const Hero = () => {
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: { xs: 'center', md: 'flex-start' }
+              alignItems: { xs: 'flex-start', md: 'flex-start' }
             }}>
               <Typography
                 component="h1"
@@ -262,7 +262,7 @@ const Hero = () => {
                     sm: '2rem', 
                     md: '2rem' 
                   },
-                  textAlign: { xs: 'center', md: 'left' },
+                  textAlign: { xs: 'left', md: 'left' },
                   mb: { xs: 0, md: 1 }
                 }}
               >
@@ -274,8 +274,8 @@ const Hero = () => {
                 color="text.secondary"
                 sx={{ 
                   display: { xs: 'block', sm: 'block' },
-                  fontSize: { xs: '0.775rem',sm: '0.875rem', md: '1rem' },
-                  textAlign: { xs: 'center', md: 'left' }
+                  fontSize: { xs: '0.700rem',sm: '0.875rem', md: '1rem' },
+                  textAlign: { xs: 'left', md: 'left' }
                 }}
               >
                 Akademik çalışmalar, araştırmalar ve öğretim üzerine odaklanmış bir akademisyen.
