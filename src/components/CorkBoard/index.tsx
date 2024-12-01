@@ -111,6 +111,32 @@ const CorkBoard = () => {
     await updateNote(noteId, { size });
   }, [session, setIsResizing, updateNote]);
 
+  const handleNoteAction = async (content: string, type: 'note' | 'image', color: string, fontFamily: string) => {
+    if (!content.trim()) return;
+
+    if (editingNote?._id) {
+      // Düzenleme modu
+      await updateNote(editingNote._id, {
+        content: type === 'note' ? content : editingNote.content,
+        url: type === 'image' ? content : editingNote.url,
+        color,
+        fontFamily,
+      });
+    } else {
+      // Yeni not ekleme modu
+      await handleAddNote({
+        type,
+        content: type === 'note' ? content : '',
+        url: type === 'image' ? content : undefined,
+        color,
+        fontFamily,
+        position: { x: 50, y: 50 },
+        size: { width: type === 'image' ? 300 : 200, height: type === 'image' ? 300 : 200 },
+        rotation: Math.random() * 10 - 5,
+      });
+    }
+  };
+
   return (
     <CorkBoardContainer
       isLoading={isLoading}
@@ -118,20 +144,7 @@ const CorkBoard = () => {
       onErrorClose={() => setError(null)}
       isAdmin={!!session?.user?.isAdmin}
       onAddClick={() => {
-        setEditingNote({
-          id: 'temp-' + Date.now(),
-          type: 'note',
-          content: '',
-          position: { x: 0, y: 0 },
-          size: { width: 200, height: 200 },
-          rotation: 0,
-          color: '#fff9c4',
-          fontFamily: 'Roboto',
-          createdAt: new Date(),
-          userId: session?.user?.id || '',
-          likes: [],
-          comments: []
-        });
+        setEditingNote(null);
         setIsDialogOpen(true);
       }}
       boardRef={boardRef}
@@ -171,20 +184,8 @@ const CorkBoard = () => {
             setIsDialogOpen(false);
             setEditingNote(null);
           }}
-          onAdd={(content, type, color, fontFamily) => {
-            if (!content.trim()) return;
-            
-            handleAddNote({
-              type,
-              content: type === 'note' ? content : '',
-              url: type === 'image' ? content : undefined,
-              color,
-              fontFamily,
-              position: { x: 50, y: 50 },
-              size: { width: type === 'image' ? 300 : 200, height: type === 'image' ? 300 : 200 },
-              rotation: Math.random() * 10 - 5,
-            });
-          }}
+          onAdd={handleNoteAction}
+          editingNote={editingNote}
         />
       )}
     </CorkBoardContainer>

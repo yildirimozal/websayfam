@@ -112,18 +112,15 @@ const PublicCorkBoard = () => {
 
         {session && (isAdmin || canAddNote) && (
           <Tooltip title={canAddNote ? "Yeni Not Ekle" : "Bu periyotta daha fazla not ekleyemezsiniz"}>
-            <Fab
-              color="primary"
-              sx={{
-                position: 'fixed',
-                bottom: 32,
-                right: 32
-              }}
-              onClick={() => setIsAddDialogOpen(true)}
-              disabled={!canAddNote && !isAdmin}
-            >
-              <AddIcon />
-            </Fab>
+            <Box sx={{ position: 'fixed', bottom: 500, right: 460, zIndex: 1000 }}>
+              <Fab
+                color="primary"
+                onClick={() => setIsAddDialogOpen(true)}
+                disabled={!canAddNote && !isAdmin}
+              >
+                <AddIcon />
+              </Fab>
+            </Box>
           </Tooltip>
         )}
 

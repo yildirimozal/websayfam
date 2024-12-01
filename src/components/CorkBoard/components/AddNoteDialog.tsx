@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -42,6 +42,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   open,
   onClose,
   onAdd,
+  editingNote
 }) => {
   const theme = useTheme();
   const isXsScreen = useMediaQuery('(max-width:320px)');
@@ -54,6 +55,20 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingNote) {
+      setContent(editingNote.type === 'note' ? editingNote.content || '' : editingNote.url || '');
+      setType(editingNote.type);
+      setSelectedColor(editingNote.color);
+      setSelectedFont(editingNote.fontFamily);
+    } else {
+      setContent('');
+      setType('note');
+      setSelectedColor('#fff9c4');
+      setSelectedFont('Roboto');
+    }
+  }, [editingNote]);
 
   const handleAdd = () => {
     const isValid = type === 'note' 
@@ -196,7 +211,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
         fontSize: { xs: '1.1rem', sm: '1.25rem' },
         p: { xs: 2, sm: 3 }
       }}>
-        Yeni Not Ekle
+        {editingNote ? 'Notu Düzenle' : 'Yeni Not Ekle'}
       </DialogTitle>
       <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Box sx={{ mb: 2, mt: 1, display: 'flex', gap: 1 }}>
@@ -205,6 +220,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
             onClick={() => setType('note')}
             size={isSmScreen ? "small" : "medium"}
             sx={{ flex: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            disabled={!!editingNote}
           >
             Not
           </Button>
@@ -213,6 +229,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
             onClick={() => setType('image')}
             size={isSmScreen ? "small" : "medium"}
             sx={{ flex: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            disabled={!!editingNote}
           >
             Resim
           </Button>
@@ -413,7 +430,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
           size={isSmScreen ? "small" : "medium"}
           sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
         >
-          Ekle
+          {editingNote ? 'Güncelle' : 'Ekle'}
         </Button>
       </DialogActions>
     </Dialog>

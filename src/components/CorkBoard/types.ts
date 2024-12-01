@@ -46,6 +46,7 @@ export interface AddNoteDialogProps {
   open: boolean;
   onClose: () => void;
   onAdd: (content: string, type: 'note' | 'image', color: string, fontFamily: string) => void;
+  editingNote?: Note | null;
 }
 
 export interface EditNoteDialogProps {
