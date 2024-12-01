@@ -12,7 +12,8 @@ import {
   MenuItem, 
   useMediaQuery, 
   styled,
-  Tooltip
+  Tooltip,
+  Avatar
 } from '@mui/material';
 import { 
   LinkedIn, 
@@ -23,10 +24,12 @@ import {
   MenuBook, 
   Dashboard, 
   Menu as MenuIcon, 
-  AdminPanelSettings as AdminIcon 
+  AdminPanelSettings as AdminIcon,
+  Login as LoginIcon,
+  Logout as LogoutIcon
 } from '@mui/icons-material';
 import NextLink from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 interface MenuItem {
   icon: React.ReactElement;
@@ -102,6 +105,12 @@ const Hero = () => {
     setAnchorEl(null);
   };
 
+  const handleSignOut = () => {
+    signOut();
+  };
+
+  const isAdmin = session?.user?.email === 'ozalyildirim@firat.edu.tr';
+
   return (
     <Box
       sx={{
@@ -116,6 +125,88 @@ const Hero = () => {
         }
       }}
     >
+      {/* Kullanıcı Kontrolleri */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: isMobile ? 48 : 8,
+          display: 'flex',
+          gap: 1,
+          zIndex: 2,
+        }}
+      >
+        {session ? (
+          <>
+            {isAdmin && (
+              <NextLink href="/admin" passHref>
+                <Tooltip title="Admin Paneli">
+                  <IconButton
+                    size="small"
+                    sx={{
+                      color: theme.palette.primary.main,
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(8px)',
+                      '&:hover': {
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)',
+                      },
+                    }}
+                  >
+                    <AdminIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </NextLink>
+            )}
+            <Tooltip title={session.user?.name || 'Kullanıcı'}>
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  fontSize: '0.875rem',
+                  backgroundColor: theme.palette.primary.main,
+                }}
+              >
+                {session.user?.name?.charAt(0) || 'U'}
+              </Avatar>
+            </Tooltip>
+            <Tooltip title="Çıkış Yap">
+              <IconButton
+                size="small"
+                onClick={handleSignOut}
+                sx={{
+                  color: theme.palette.error.main,
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(8px)',
+                  '&:hover': {
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)',
+                  },
+                }}
+              >
+                <LogoutIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : (
+          <NextLink href="/auth/signin" passHref>
+            <Tooltip title="Giriş Yap">
+              <IconButton
+                size="small"
+                sx={{
+                  color: theme.palette.primary.main,
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(8px)',
+                  '&:hover': {
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)',
+                  },
+                }}
+              >
+                <LoginIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </NextLink>
+        )}
+      </Box>
+
       {/* Mobil Menü Butonu */}
       {isMobile && (
         <IconButton

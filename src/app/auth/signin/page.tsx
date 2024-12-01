@@ -19,7 +19,7 @@ export default function SignIn() {
         }}
       >
         <Typography component="h1" variant="h4">
-          Yönetici Girişi
+          Kullanıcı Girişi
         </Typography>
         <Button
           variant="contained"
