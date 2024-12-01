@@ -357,7 +357,7 @@ const Hero = () => {
                   mb: { xs: 0, md: 1 }
                 }}
               >
-                Doç.Dr. Özal YILDIRIM
+                Özal YILDIRIM
               </Typography>
 
               <Typography 

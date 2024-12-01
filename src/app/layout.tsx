@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Kalam } from 'next/font/google';
 import Providers from '../components/Providers';
+import Footer from '../components/Footer';
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -45,9 +46,17 @@ export default function RootLayout({
       </head>
       <body className={kalam.className}>
         <Providers>
-          <main style={{ minHeight: '100vh', background: 'var(--background-default)' }}>
-            {children}
-          </main>
+          <div style={{ 
+            minHeight: '100vh', 
+            display: 'flex', 
+            flexDirection: 'column',
+            background: 'var(--background-default)'
+          }}>
+            <main style={{ flex: 1 }}>
+              {children}
+            </main>
+            <Footer />
+          </div>
         </Providers>
       </body>
     </html>
