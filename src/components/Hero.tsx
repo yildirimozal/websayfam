@@ -110,8 +110,8 @@ const Hero = () => {
         position: 'relative',
         overflow: 'hidden',
         height: { 
-          xs: '150px',
-          sm: '150px',
+          xs: '170px',
+          sm: '170px',
           md: '200px'
         }
       }}
@@ -258,7 +258,7 @@ const Hero = () => {
                   WebkitTextFillColor: 'transparent',
                   fontWeight: 700,
                   fontSize: { 
-                    xs: '2rem',
+                    xs: '1.5rem',
                     sm: '2rem', 
                     md: '2rem' 
                   },
