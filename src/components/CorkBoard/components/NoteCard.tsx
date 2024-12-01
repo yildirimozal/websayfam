@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ResizableBox } from 'react-resizable';
 import { Note, Comment, NoteCardProps } from '../types';
 import { useSession, signIn } from 'next-auth/react';
+import NoteDetailDialog from './NoteDetailDialog';
 
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
@@ -26,6 +27,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [isViewCommentsDialogOpen, setIsViewCommentsDialogOpen] = useState(false);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(note.likeCount || 0);
@@ -159,6 +161,14 @@ const NoteCard: React.FC<NoteCardProps> = ({
     setIsCommentDialogOpen(true);
   };
 
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isAdmin && !isResizing) {
+      setIsDetailDialogOpen(true);
+    } else {
+      onMouseDown(e);
+    }
+  };
+
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString('tr-TR', {
       year: 'numeric',
@@ -182,14 +192,14 @@ const NoteCard: React.FC<NoteCardProps> = ({
         draggableOpts={{ enableUserSelectHack: false }}
       >
         <Card
-          onMouseDown={onMouseDown}
+          onMouseDown={handleCardClick}
           sx={{
             width: '100%',
             height: '100%',
             backgroundColor: note.type === 'note' ? note.color : 'white',
             transform: `rotate(${note.rotation}deg) ${isActive ? 'scale(1.02)' : ''}`,
             transition: 'transform 0.2s ease-in-out',
-            cursor: isAdmin ? (isResizing ? 'se-resize' : 'move') : 'default',
+            cursor: isAdmin ? (isResizing ? 'se-resize' : 'move') : 'pointer',
             boxShadow: `
               ${theme.shadows[isActive ? 8 : 2]},
               2px 2px 5px rgba(0,0,0,0.1)
@@ -370,6 +380,18 @@ const NoteCard: React.FC<NoteCardProps> = ({
           </Box>
         </Card>
       </ResizableBox>
+
+      {/* Detay Dialog'u */}
+      <NoteDetailDialog
+        note={note}
+        open={isDetailDialogOpen}
+        onClose={() => setIsDetailDialogOpen(false)}
+        onLike={handleLike}
+        isLiked={isLiked}
+        likeCount={likeCount}
+        commentCount={commentCount}
+        onCommentClick={() => setIsViewCommentsDialogOpen(true)}
+      />
 
       {/* Yorum Ekleme Dialog'u */}
       <Dialog

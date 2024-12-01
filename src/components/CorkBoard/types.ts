@@ -65,6 +65,17 @@ export interface CommentDialogProps {
   canDeleteComment: (comment: Comment) => boolean;
 }
 
+export interface NoteDetailDialogProps {
+  note: Note;
+  open: boolean;
+  onClose: () => void;
+  onLike: (e: React.MouseEvent) => Promise<void>;
+  isLiked: boolean;
+  likeCount: number;
+  commentCount: number;
+  onCommentClick: () => void;
+}
+
 export interface CorkBoardContainerProps {
   isLoading: boolean;
   error: string | null;
