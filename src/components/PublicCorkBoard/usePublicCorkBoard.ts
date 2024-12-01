@@ -31,10 +31,9 @@ export const usePublicCorkBoard = () => {
   const normalizeNote = useCallback((note: any): Note => {
     return {
       id: note.id || note._id || generateTempId(),
-      content: note.content || '',
       type: note.type || 'note',
+      content: note.content || '',
       url: note.url,
-      author: note.author || null,
       position: note.position && typeof note.position.x === 'number' && typeof note.position.y === 'number' 
         ? note.position 
         : { x: 50, y: 50 },
@@ -47,8 +46,24 @@ export const usePublicCorkBoard = () => {
       rotation: typeof note.rotation === 'number' ? note.rotation : 0,
       color: note.color || '#fff9c4',
       fontFamily: note.fontFamily || 'Roboto',
+      author: {
+        name: note.author?.name || 'Anonim',
+        email: note.author?.email || 'anonymous@example.com',
+        image: note.author?.image || '/default-avatar.png'
+      },
       likes: Array.isArray(note.likes) ? note.likes : [],
-      comments: Array.isArray(note.comments) ? note.comments : [],
+      comments: Array.isArray(note.comments) ? note.comments.map((comment: any) => ({
+        id: comment.id || generateTempId(),
+        userId: comment.userId || 'anonymous',
+        content: comment.content || '',
+        createdAt: comment.createdAt || new Date().toISOString(),
+        author: {
+          id: comment.author?.id || 'anonymous',
+          name: comment.author?.name || 'Anonim',
+          email: comment.author?.email,
+          image: comment.author?.image || '/default-avatar.png'
+        }
+      })) : [],
       createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
       updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date()
     };
