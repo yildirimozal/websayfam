@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/config';
 import { connectToDatabase } from '@/lib/mongodb';
-import { Note } from '@/models/Note';
+import { PrivateNote } from '@/models/PrivateNote';
 
 // GET - Tüm notları getir
 export async function GET(request: Request) {
   try {
     await connectToDatabase();
-    const notes = await Note.find().sort({ createdAt: -1 });
+    const notes = await PrivateNote.find().sort({ createdAt: -1 });
     return NextResponse.json(notes);
   } catch (error) {
     console.error('Notlar yüklenirken hata:', error);
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     await connectToDatabase();
     const data = await request.json();
 
-    const note = await Note.create({
+    const note = await PrivateNote.create({
       ...data,
       author: {
         name: session.user.name || 'Anonim',
@@ -61,7 +61,7 @@ export async function PUT(request: Request) {
 
     await connectToDatabase();
 
-    const note = await Note.findOneAndUpdate(
+    const note = await PrivateNote.findOneAndUpdate(
       { _id: id, 'author.email': session.user.email },
       updateData,
       { new: true }
@@ -98,7 +98,7 @@ export async function DELETE(request: Request) {
 
     await connectToDatabase();
     
-    const note = await Note.findOneAndDelete({
+    const note = await PrivateNote.findOneAndDelete({
       _id: id,
       'author.email': session.user.email
     });
