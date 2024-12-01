@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Box, IconButton, useTheme, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Card, CardContent, Typography, Box, IconButton, useTheme, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, List, ListItem, ListItemText, Divider, useMediaQuery } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, Comment as CommentIcon } from '@mui/icons-material';
 import Image from 'next/image';
 import { ResizableBox } from 'react-resizable';
@@ -21,6 +21,9 @@ const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
   const theme = useTheme();
   const { data: session } = useSession();
+  const isXsScreen = useMediaQuery('(max-width:320px)');
+  const isSmScreen = useMediaQuery('(max-width:375px)');
+  
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [isViewCommentsDialogOpen, setIsViewCommentsDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -166,15 +169,21 @@ const NoteCard: React.FC<NoteCardProps> = ({
     });
   };
 
+  // Mobil ekranlar için minimum ve maksimum boyutları ayarla
+  const minConstraints = isXsScreen ? [120, 80] : isSmScreen ? [150, 100] : [200, 150];
+  const maxConstraints = isXsScreen ? [280, 400] : isSmScreen ? [320, 500] : [800, 800];
+  const defaultWidth = isXsScreen ? 150 : isSmScreen ? 180 : 200;
+  const defaultHeight = isXsScreen ? 100 : isSmScreen ? 120 : 150;
+
   return (
     <>
       <ResizableBox
-        width={note.size?.width || 200}
-        height={note.size?.height || 150}
+        width={note.size?.width || defaultWidth}
+        height={note.size?.height || defaultHeight}
         onResize={onResize}
         onResizeStop={onResizeStop}
-        minConstraints={[150, 100]}
-        maxConstraints={[800, 800]}
+        minConstraints={minConstraints}
+        maxConstraints={maxConstraints}
         resizeHandles={['se']}
         draggableOpts={{ enableUserSelectHack: false }}
       >
@@ -197,8 +206,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
               top: 0,
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '40px',
-              height: '10px',
+              width: isXsScreen ? '30px' : '40px',
+              height: isXsScreen ? '8px' : '10px',
               backgroundColor: 'rgba(0,0,0,0.1)',
               clipPath: 'polygon(0 0, 100% 0, 90% 100%, 10% 100%)',
             } : undefined,
@@ -208,8 +217,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
           {isAdmin && (
             <Box sx={{ 
               position: 'absolute', 
-              top: 5, 
-              right: 5, 
+              top: isXsScreen ? 2 : 5, 
+              right: isXsScreen ? 2 : 5, 
               zIndex: 1,
               display: 'flex',
               gap: 0.5,
@@ -224,9 +233,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   opacity: 0,
                   '&:hover': { opacity: 1 },
                   backgroundColor: 'rgba(255,255,255,0.8)',
+                  padding: isXsScreen ? '4px' : '8px',
                 }}
               >
-                <EditIcon fontSize="small" />
+                <EditIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
               </IconButton>
               <IconButton 
                 size="small"
@@ -238,17 +248,28 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   opacity: 0,
                   '&:hover': { opacity: 1 },
                   backgroundColor: 'rgba(255,255,255,0.8)',
+                  padding: isXsScreen ? '4px' : '8px',
                 }}
               >
-                <DeleteIcon fontSize="small" />
+                <DeleteIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
               </IconButton>
             </Box>
           )}
           {note.type === 'note' ? (
-            <CardContent sx={{ height: '100%', overflow: 'auto', pt: 4, pb: '36px !important' }}>
+            <CardContent sx={{ 
+              height: '100%', 
+              overflow: 'auto', 
+              pt: isXsScreen ? 3 : 4, 
+              pb: '36px !important',
+              px: isXsScreen ? 1 : 2
+            }}>
               <Typography 
                 sx={{
-                  fontSize: '1rem',
+                  fontSize: {
+                    xs: '0.875rem',
+                    sm: '0.9rem',
+                    md: '1rem'
+                  },
                   color: '#2c1810',
                   lineHeight: 1.5,
                   fontFamily: note.fontFamily || 'Roboto',
@@ -265,9 +286,9 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 position: 'relative',
                 width: '100%',
                 height: '100%',
-                p: 1,
+                p: isXsScreen ? 0.5 : 1,
                 backgroundColor: 'white',
-                pt: 4,
+                pt: isXsScreen ? 3 : 4,
               }}
             >
               <Image
@@ -290,7 +311,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
               display: 'flex',
               justifyContent: 'space-around',
               alignItems: 'center',
-              padding: '4px',
+              padding: isXsScreen ? '2px' : '4px',
               backgroundColor: 'rgba(255,255,255,0.8)',
             }}
           >
@@ -300,18 +321,43 @@ const NoteCard: React.FC<NoteCardProps> = ({
               sx={{ 
                 color: isLiked ? 'red' : 'inherit',
                 '&:hover': { color: 'red' },
+                padding: isXsScreen ? '4px' : '8px',
               }}
             >
-              <Badge badgeContent={likeCount} color="primary">
-                {isLiked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+              <Badge 
+                badgeContent={likeCount} 
+                color="primary"
+                sx={{
+                  '& .MuiBadge-badge': {
+                    fontSize: isXsScreen ? '0.6rem' : '0.75rem',
+                    minWidth: isXsScreen ? '14px' : '20px',
+                    height: isXsScreen ? '14px' : '20px',
+                  }
+                }}
+              >
+                {isLiked ? 
+                  <FavoriteIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} /> : 
+                  <FavoriteBorderIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
+                }
               </Badge>
             </IconButton>
             <IconButton
               size="small"
               onClick={handleCommentClick}
+              sx={{ padding: isXsScreen ? '4px' : '8px' }}
             >
-              <Badge badgeContent={commentCount} color="primary">
-                <CommentIcon fontSize="small" />
+              <Badge 
+                badgeContent={commentCount} 
+                color="primary"
+                sx={{
+                  '& .MuiBadge-badge': {
+                    fontSize: isXsScreen ? '0.6rem' : '0.75rem',
+                    minWidth: isXsScreen ? '14px' : '20px',
+                    height: isXsScreen ? '14px' : '20px',
+                  }
+                }}
+              >
+                <CommentIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
               </Badge>
             </IconButton>
           </Box>
@@ -324,10 +370,16 @@ const NoteCard: React.FC<NoteCardProps> = ({
         onClose={() => setIsCommentDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        fullScreen={isXsScreen}
       >
-        <DialogTitle>Yorum Ekle</DialogTitle>
+        <DialogTitle sx={{ 
+          fontSize: isXsScreen ? '1.1rem' : '1.25rem',
+          p: isXsScreen ? 2 : 3
+        }}>
+          Yorum Ekle
+        </DialogTitle>
         <form onSubmit={handleComment}>
-          <DialogContent>
+          <DialogContent sx={{ p: isXsScreen ? 2 : 3 }}>
             <TextField
               autoFocus
               multiline
@@ -337,13 +389,26 @@ const NoteCard: React.FC<NoteCardProps> = ({
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Yorumunuzu yazın..."
               variant="outlined"
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontSize: isXsScreen ? '0.875rem' : '1rem'
+                }
+              }}
             />
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setIsCommentDialogOpen(false)}>
+          <DialogActions sx={{ p: isXsScreen ? 2 : 3 }}>
+            <Button 
+              onClick={() => setIsCommentDialogOpen(false)}
+              size={isXsScreen ? "small" : "medium"}
+            >
               İptal
             </Button>
-            <Button type="submit" variant="contained" disabled={!commentText.trim()}>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              disabled={!commentText.trim()}
+              size={isXsScreen ? "small" : "medium"}
+            >
               Gönder
             </Button>
           </DialogActions>
@@ -356,23 +421,35 @@ const NoteCard: React.FC<NoteCardProps> = ({
         onClose={() => setIsViewCommentsDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        fullScreen={isXsScreen}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          fontSize: isXsScreen ? '1.1rem' : '1.25rem',
+          p: isXsScreen ? 2 : 3
+        }}>
           Yorumlar
           <Button
             variant="contained"
-            size="small"
-            sx={{ float: 'right' }}
+            size={isXsScreen ? "small" : "medium"}
+            sx={{ 
+              float: 'right',
+              fontSize: isXsScreen ? '0.75rem' : '0.875rem'
+            }}
             onClick={handleAddCommentClick}
           >
             Yorum Ekle
           </Button>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: isXsScreen ? 1 : 2 }}>
           <List>
             {comments.length === 0 ? (
               <ListItem>
-                <ListItemText primary="Henüz yorum yapılmamış" />
+                <ListItemText 
+                  primary="Henüz yorum yapılmamış"
+                  primaryTypographyProps={{
+                    fontSize: isXsScreen ? '0.875rem' : '1rem'
+                  }}
+                />
               </ListItem>
             ) : (
               comments.map((comment, index) => (
@@ -381,6 +458,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
                     <ListItemText
                       primary={comment.content}
                       secondary={formatDate(comment.createdAt)}
+                      primaryTypographyProps={{
+                        fontSize: isXsScreen ? '0.875rem' : '1rem'
+                      }}
+                      secondaryTypographyProps={{
+                        fontSize: isXsScreen ? '0.75rem' : '0.875rem'
+                      }}
                     />
                   </ListItem>
                   {index < comments.length - 1 && <Divider />}
@@ -389,8 +472,11 @@ const NoteCard: React.FC<NoteCardProps> = ({
             )}
           </List>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsViewCommentsDialogOpen(false)}>
+        <DialogActions sx={{ p: isXsScreen ? 2 : 3 }}>
+          <Button 
+            onClick={() => setIsViewCommentsDialogOpen(false)}
+            size={isXsScreen ? "small" : "medium"}
+          >
             Kapat
           </Button>
         </DialogActions>

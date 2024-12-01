@@ -1,5 +1,6 @@
 'use client';
 
+// ... (önceki importlar ve tanımlamalar aynı)
 import React, { useState } from 'react';
 import { Box, Container, Grid, IconButton, Link, Tooltip, Typography, useTheme, Button, Menu, MenuItem, useMediaQuery, styled, Avatar } from '@mui/material';
 import { LinkedIn, Email, Article, School, Home, MenuBook, Dashboard, Menu as MenuIcon, Login as LoginIcon, Logout as LogoutIcon, AdminPanelSettings as AdminIcon, AccountCircle } from '@mui/icons-material';
@@ -31,7 +32,7 @@ const socialLinks = [
   {
     icon: <Email />,
     tooltip: "E-posta Gönder",
-    href: "mailto:ozal.yildirim@example.com",
+    href: "mailto:ozalyildirim@firat.edu.tr",
     label: "email",
     color: "#D93025"
   },
@@ -60,18 +61,20 @@ const menuItems = [
 ];
 
 const Hero = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { data: session } = useSession();
+  // ... (önceki hooks ve state tanımlamaları aynı)
+// ... (önceki state ve hooks tanımları aynı)
+const theme = useTheme();
+const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+const { data: session } = useSession();
 
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+  setAnchorEl(event.currentTarget);
+};
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+const handleClose = () => {
+  setAnchorEl(null);
+};
 
   return (
     <Box
@@ -80,23 +83,34 @@ const Hero = () => {
         boxShadow: theme.shadows[1],
         position: 'relative',
         overflow: 'hidden',
+        height: { 
+          xs: '180px',  // Mobil için daha kompakt
+          sm: '200px',  // Tablet için orta boy
+          md: '220px'   // Desktop için normal boy
+        },
+        minHeight: {
+          xs: '180px',
+          sm: '200px',
+          md: '220px'
+        }
       }}
     >
       {/* Sosyal Bağlantılar ve Giriş */}
       <Box 
         sx={{ 
           position: 'absolute',
-          top: { xs: 8, sm: 16 },
-          right: { xs: 8, sm: 24 },
+          top: { xs: 4, sm: 8, md: 16 },  // Üst boşluk azaltıldı
+          right: { xs: 4, sm: 8, md: 24 },
           display: 'flex',
-          gap: 1,
+          gap: 0.5,  // Gap azaltıldı
           zIndex: 1,
           backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
-          padding: '4px',
+          padding: { xs: '2px', sm: '4px' },  // Padding azaltıldı
           borderRadius: '8px',
           backdropFilter: 'blur(8px)',
         }}
       >
+        {/* ... (sosyal bağlantılar ve giriş kısmı aynı) */}
         {socialLinks.map((link) => (
           <Tooltip 
             key={link.label}
@@ -183,27 +197,30 @@ const Hero = () => {
             </IconButton>
           </Tooltip>
         )}
-      </Box>
+             </Box>
 
       <Container 
         maxWidth="lg"
         sx={{ 
-          py: { xs: 4, md: 6 },
-          px: { xs: 2, sm: 3, md: 4 }
+          py: { xs: 1, sm: 2, md: 3 },  // Padding değerleri azaltıldı
+          px: { xs: 1, sm: 2, md: 3 },
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={1} alignItems="center">  {/* Grid spacing azaltıldı */}
           <Grid item xs={12} md={4}>
             <Box
               sx={{
                 position: 'relative',
-                width: 150,
-                height: 150,
+                width: { xs: 80, sm: 100, md: 120 },  // Profil resmi boyutları küçültüldü
+                height: { xs: 80, sm: 100, md: 120 },
                 margin: 'auto',
                 borderRadius: '50%',
                 overflow: 'hidden',
-                border: `3px solid ${theme.palette.primary.main}`,
-                boxShadow: theme.shadows[3],
+                border: `2px solid ${theme.palette.primary.main}`,  // Border kalınlığı azaltıldı
+                boxShadow: theme.shadows[2],
               }}
             >
               <img
@@ -219,7 +236,7 @@ const Hero = () => {
             </Box>
           </Grid>
           <Grid item xs={12} md={8}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>  {/* Gap ve margin azaltıldı */}
               <Typography
                 component="h1"
                 variant="h3"
@@ -228,10 +245,16 @@ const Hero = () => {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   fontWeight: 700,
+                  fontSize: { 
+                    xs: '1.25rem',  // Font boyutları küçültüldü
+                    sm: '1.5rem', 
+                    md: '2rem' 
+                  }
                 }}
               >
                 Doç.Dr. Özal YILDIRIM
               </Typography>
+              {/* ... (admin icon aynı) */}
               {session?.user?.isAdmin && (
                 <Tooltip title="Admin Yetkisi">
                   <AdminIcon 
@@ -242,15 +265,24 @@ const Hero = () => {
                   />
                 </Tooltip>
               )}
-            </Box>
+                         </Box>
             <Typography 
               variant="h6" 
               color="text.secondary"
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: { xs: 0.5, sm: 1, md: 1.5 },  // Margin azaltıldı
+                fontSize: { 
+                  xs: '0.75rem',  // Font boyutları küçültüldü
+                  sm: '0.875rem', 
+                  md: '1rem' 
+                },
+                display: { xs: 'none', sm: 'block' }  // Mobilde açıklama gizlendi
+              }}
             >
               Akademik çalışmalar, araştırmalar ve öğretim üzerine odaklanmış bir akademisyen.
               Bilgi paylaşımı ve akademik işbirliği için bu platformda sizlerle buluşuyorum.
             </Typography>
+            {/* ... (menü kısmı aynı) */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}>
               {!isMobile ? (
                 <Box sx={{ display: 'flex' }}>
@@ -288,10 +320,12 @@ const Hero = () => {
                 </IconButton>
               )}
             </Box>
-          </Grid>
+                      </Grid>
         </Grid>
       </Container>
 
+      {/* ... (mobil menü aynı) */}
+ 
       {/* Mobil Menü */}
       <Menu
         anchorEl={anchorEl}
@@ -338,7 +372,7 @@ const Hero = () => {
           </MenuItem>
         ))}
       </Menu>
-    </Box>
+         </Box>
   );
 };
 

@@ -10,6 +10,8 @@ import {
   TextField,
   Box,
   Typography,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { EditNoteDialogProps } from '../types';
 
@@ -39,6 +41,10 @@ const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
   onSave,
   note,
 }) => {
+  const theme = useTheme();
+  const isXsScreen = useMediaQuery('(max-width:320px)');
+  const isSmScreen = useMediaQuery('(max-width:375px)');
+
   const [content, setContent] = useState('');
   const [selectedColor, setSelectedColor] = useState(note.color || '#fff9c4');
   const [selectedFont, setSelectedFont] = useState(note.fontFamily || 'Roboto');
@@ -73,13 +79,19 @@ const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={isXsScreen}
     >
-      <DialogTitle>Notu Düzenle</DialogTitle>
-      <DialogContent>
+      <DialogTitle sx={{ 
+        fontSize: { xs: '1.1rem', sm: '1.25rem' },
+        p: { xs: 2, sm: 3 }
+      }}>
+        Notu Düzenle
+      </DialogTitle>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
         <TextField
           autoFocus
           multiline
-          rows={4}
+          rows={isXsScreen ? 3 : 4}
           fullWidth
           value={content}
           onChange={handleContentChange}
@@ -88,22 +100,42 @@ const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
           margin="normal"
           error={content.length > MAX_LENGTH}
           helperText={`${remainingChars} karakter kaldı`}
-          sx={{ mb: 2 }}
+          sx={{ 
+            mb: 2,
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            },
+            '& .MuiFormHelperText-root': {
+              fontSize: { xs: '0.7rem', sm: '0.75rem' }
+            }
+          }}
         />
 
         {note.type === 'note' && (
           <>
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                mt: 2, 
+                mb: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' }
+              }}
+            >
               Arkaplan Rengi
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: isXsScreen ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)',
+              gap: 1,
+              mb: 2 
+            }}>
               {colorOptions.map((color) => (
                 <Box
                   key={color.value}
                   onClick={() => setSelectedColor(color.value)}
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: isXsScreen ? 32 : 40,
+                    height: isXsScreen ? 32 : 40,
                     backgroundColor: color.value,
                     borderRadius: 1,
                     cursor: 'pointer',
@@ -120,16 +152,27 @@ const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
               ))}
             </Box>
 
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                mt: 2, 
+                mb: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' }
+              }}
+            >
               Yazı Tipi
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: isXsScreen ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+              gap: 1 
+            }}>
               {fontOptions.map((font) => (
                 <Box
                   key={font.value}
                   onClick={() => setSelectedFont(font.value)}
                   sx={{
-                    padding: '8px 12px',
+                    padding: { xs: '6px 8px', sm: '8px 12px' },
                     backgroundColor: selectedFont === font.value ? '#e3f2fd' : '#f5f5f5',
                     borderRadius: 1,
                     cursor: 'pointer',
@@ -137,7 +180,12 @@ const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
                     '&:hover': {
                       backgroundColor: '#e3f2fd'
                     },
-                    fontFamily: font.value
+                    fontFamily: font.value,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
                   }}
                 >
                   {font.label}
@@ -147,14 +195,20 @@ const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
           </>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>
+      <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
+        <Button 
+          onClick={onClose}
+          size={isSmScreen ? "small" : "medium"}
+          sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+        >
           İptal
         </Button>
         <Button 
           onClick={handleSave}
           variant="contained"
           disabled={!content.trim() || content.length > MAX_LENGTH}
+          size={isSmScreen ? "small" : "medium"}
+          sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
         >
           Kaydet
         </Button>

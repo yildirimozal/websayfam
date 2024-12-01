@@ -11,6 +11,8 @@ import {
   Box,
   Typography,
   CircularProgress,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import { AddNoteDialogProps } from '../types';
@@ -41,6 +43,10 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   onClose,
   onAdd,
 }) => {
+  const theme = useTheme();
+  const isXsScreen = useMediaQuery('(max-width:320px)');
+  const isSmScreen = useMediaQuery('(max-width:375px)');
+
   const [content, setContent] = useState('');
   const [type, setType] = useState<'note' | 'image'>('note');
   const [selectedColor, setSelectedColor] = useState('#fff9c4');
@@ -52,15 +58,9 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   const handleAdd = () => {
     const isValid = type === 'note' 
       ? content.trim() && content.length <= MAX_LENGTH
-      : content.trim(); // Resim için sadece URL'nin varlığını kontrol et
+      : content.trim();
 
     if (isValid) {
-      console.log('AddNoteDialog handleAdd called with:', {
-        content,
-        type,
-        color: selectedColor,
-        fontFamily: selectedFont
-      });
       onAdd(content, type, selectedColor, selectedFont);
       handleClose();
     }
@@ -85,12 +85,10 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
   };
 
   const handleColorSelect = (color: string) => {
-    console.log('Color selected:', color);
     setSelectedColor(color);
   };
 
   const handleFontSelect = (font: string) => {
-    console.log('Font selected:', font);
     setSelectedFont(font);
   };
 
@@ -126,7 +124,6 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       }
 
       const data = await response.json();
-      console.log('Uploaded image URL:', data.url);
       setContent(data.url);
       setType('image');
     } catch (error) {
@@ -172,7 +169,6 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       }
 
       const data = await response.json();
-      console.log('Uploaded image URL:', data.url);
       setContent(data.url);
       setType('image');
     } catch (error) {
@@ -194,20 +190,29 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={isXsScreen}
     >
-      <DialogTitle>Yeni Not Ekle</DialogTitle>
-      <DialogContent>
-        <Box sx={{ mb: 2, mt: 1 }}>
+      <DialogTitle sx={{ 
+        fontSize: { xs: '1.1rem', sm: '1.25rem' },
+        p: { xs: 2, sm: 3 }
+      }}>
+        Yeni Not Ekle
+      </DialogTitle>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ mb: 2, mt: 1, display: 'flex', gap: 1 }}>
           <Button
             variant={type === 'note' ? 'contained' : 'outlined'}
             onClick={() => setType('note')}
-            sx={{ mr: 1 }}
+            size={isSmScreen ? "small" : "medium"}
+            sx={{ flex: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
           >
             Not
           </Button>
           <Button
             variant={type === 'image' ? 'contained' : 'outlined'}
             onClick={() => setType('image')}
+            size={isSmScreen ? "small" : "medium"}
+            sx={{ flex: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
           >
             Resim
           </Button>
@@ -226,7 +231,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
               sx={{
                 border: '2px dashed #ccc',
                 borderRadius: 1,
-                p: 2,
+                p: { xs: 1.5, sm: 2 },
                 textAlign: 'center',
                 cursor: 'pointer',
                 '&:hover': {
@@ -239,33 +244,47 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
               onDragOver={handleDragOver}
             >
               {isUploading ? (
-                <CircularProgress size={24} />
+                <CircularProgress size={isXsScreen ? 20 : 24} />
               ) : content ? (
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Box sx={{ mt: { xs: 1, sm: 2 }, textAlign: 'center' }}>
                   <img
                     src={content}
                     alt="Yüklenen resim"
                     style={{
                       maxWidth: '100%',
-                      maxHeight: '300px',
+                      maxHeight: isXsScreen ? '200px' : '300px',
                       objectFit: 'contain'
                     }}
                   />
                 </Box>
               ) : (
                 <>
-                  <CloudUploadIcon sx={{ fontSize: 48, color: '#666' }} />
-                  <Typography>
+                  <CloudUploadIcon sx={{ 
+                    fontSize: { xs: 32, sm: 48 }, 
+                    color: '#666' 
+                  }} />
+                  <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                     Resim yüklemek için tıklayın veya sürükleyin
                   </Typography>
-                  <Typography variant="caption" color="textSecondary">
+                  <Typography 
+                    variant="caption" 
+                    color="textSecondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     (Maksimum 5MB)
                   </Typography>
                 </>
               )}
             </Box>
             {uploadError && (
-              <Typography color="error" variant="caption" sx={{ mt: 1 }}>
+              <Typography 
+                color="error" 
+                variant="caption" 
+                sx={{ 
+                  mt: 1,
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                }}
+              >
                 {uploadError}
               </Typography>
             )}
@@ -274,7 +293,7 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
           <TextField
             autoFocus
             multiline
-            rows={4}
+            rows={isXsScreen ? 3 : 4}
             fullWidth
             value={content}
             onChange={handleContentChange}
@@ -282,23 +301,43 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
             variant="outlined"
             error={content.length > MAX_LENGTH}
             helperText={`${remainingChars} karakter kaldı`}
-            sx={{ mb: 2 }}
+            sx={{ 
+              mb: 2,
+              '& .MuiInputBase-input': {
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              },
+              '& .MuiFormHelperText-root': {
+                fontSize: { xs: '0.7rem', sm: '0.75rem' }
+              }
+            }}
           />
         )}
 
         {type === 'note' && (
           <>
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                mt: 2, 
+                mb: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' }
+              }}
+            >
               Arkaplan Rengi
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: isXsScreen ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)',
+              gap: 1,
+              mb: 2 
+            }}>
               {colorOptions.map((color) => (
                 <Box
                   key={color.value}
                   onClick={() => handleColorSelect(color.value)}
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: isXsScreen ? 32 : 40,
+                    height: isXsScreen ? 32 : 40,
                     backgroundColor: color.value,
                     borderRadius: 1,
                     cursor: 'pointer',
@@ -315,16 +354,27 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
               ))}
             </Box>
 
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                mt: 2, 
+                mb: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' }
+              }}
+            >
               Yazı Tipi
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: isXsScreen ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+              gap: 1 
+            }}>
               {fontOptions.map((font) => (
                 <Box
                   key={font.value}
                   onClick={() => handleFontSelect(font.value)}
                   sx={{
-                    padding: '8px 12px',
+                    padding: { xs: '6px 8px', sm: '8px 12px' },
                     backgroundColor: selectedFont === font.value ? '#e3f2fd' : '#f5f5f5',
                     borderRadius: 1,
                     cursor: 'pointer',
@@ -332,7 +382,9 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
                     '&:hover': {
                       backgroundColor: '#e3f2fd'
                     },
-                    fontFamily: font.value
+                    fontFamily: font.value,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    textAlign: 'center'
                   }}
                 >
                   {font.label}
@@ -342,8 +394,12 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
           </>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>
+      <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
+        <Button 
+          onClick={handleClose}
+          size={isSmScreen ? "small" : "medium"}
+          sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+        >
           İptal
         </Button>
         <Button 
@@ -354,6 +410,8 @@ const AddNoteDialog: React.FC<AddNoteDialogProps> = ({
               ? !content.trim() || content.length > MAX_LENGTH 
               : !content.trim() || isUploading
           }
+          size={isSmScreen ? "small" : "medium"}
+          sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
         >
           Ekle
         </Button>

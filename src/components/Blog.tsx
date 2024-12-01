@@ -11,7 +11,8 @@ import {
   useTheme,
   Avatar,
   CircularProgress,
-  IconButton
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
 import { AccessTime, Visibility, Favorite } from '@mui/icons-material';
 import NextLink from 'next/link';
@@ -35,11 +36,13 @@ interface BlogPost {
 
 const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
   const theme = useTheme();
+  const isXsScreen = useMediaQuery('(max-width:320px)');
+  const isSmScreen = useMediaQuery('(max-width:375px)');
   
   return (
     <Card 
       sx={{ 
-        mb: 3,
+        mb: { xs: 2, sm: 3 },
         width: '100%',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
@@ -48,23 +51,29 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
         }
       }}
     >
-      <CardContent sx={{ p: 3 }}>
-        <Grid container spacing={3}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Grid container spacing={2}>
           {/* Sol Taraf - Yazar Bilgisi */}
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              mb: { xs: 1.5, sm: 2 },
+              flexDirection: isXsScreen ? 'column' : 'row',
+              gap: isXsScreen ? 1 : 0
+            }}>
               <Avatar 
                 src="/profile.jpg"
                 sx={{ 
-                  width: 40, 
-                  height: 40,
-                  mr: 1.5,
+                  width: { xs: 32, sm: 40 }, 
+                  height: { xs: 32, sm: 40 },
+                  mr: isXsScreen ? 0 : 1.5,
                   border: `2px solid ${theme.palette.primary.main}`
                 }}
               />
-              <Box>
+              <Box sx={{ textAlign: isXsScreen ? 'center' : 'left' }}>
                 <Typography 
-                  variant="subtitle1"
+                  variant={isSmScreen ? "subtitle2" : "subtitle1"}
                   sx={{ 
                     fontWeight: 600,
                     color: theme.palette.text.primary,
@@ -73,7 +82,13 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
                 >
                   {post.author.name}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  justifyContent: isXsScreen ? 'center' : 'flex-start',
+                  flexWrap: 'wrap'
+                }}>
                   <Typography variant="caption" color="text.secondary">
                     {new Date(post.createdAt).toLocaleDateString('tr-TR', {
                       year: 'numeric',
@@ -97,13 +112,18 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
           <Grid item xs={12}>
             <NextLink href={`/blog/${post.slug}`} passHref style={{ textDecoration: 'none' }}>
               <Typography 
-                variant="h5" 
+                variant={isSmScreen ? "h6" : "h5"}
                 component="h2" 
                 gutterBottom 
                 sx={{ 
                   fontWeight: 700,
                   color: theme.palette.text.primary,
-                  mb: 2,
+                  mb: { xs: 1.5, sm: 2 },
+                  fontSize: {
+                    xs: '1.1rem',
+                    sm: '1.25rem',
+                    md: '1.5rem'
+                  },
                   '&:hover': {
                     color: theme.palette.primary.main
                   }
@@ -116,31 +136,51 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
               variant="body1" 
               color="text.secondary" 
               sx={{ 
-                mb: 2,
+                mb: { xs: 1.5, sm: 2 },
                 lineHeight: 1.6,
-                fontSize: '1.1rem'
+                fontSize: {
+                  xs: '0.875rem',
+                  sm: '1rem',
+                  md: '1.1rem'
+                },
+                display: '-webkit-box',
+                WebkitLineClamp: isXsScreen ? 2 : 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
               }}
             >
-              {post.content.substring(0, 200)}...
+              {post.content.substring(0, isXsScreen ? 100 : 200)}...
             </Typography>
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between',
               alignItems: 'center',
-              mt: 2
+              mt: { xs: 1.5, sm: 2 },
+              flexDirection: isXsScreen ? 'column' : 'row',
+              gap: isXsScreen ? 1 : 0
             }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 0.5,
+                flexWrap: 'wrap',
+                justifyContent: isXsScreen ? 'center' : 'flex-start',
+                width: isXsScreen ? '100%' : 'auto'
+              }}>
                 {post.tags.map((tag) => (
                   <Chip
                     key={tag}
                     label={tag}
-                    size="medium"
+                    size={isSmScreen ? "small" : "medium"}
                     sx={{ 
                       backgroundColor: theme.palette.mode === 'dark' 
                         ? 'rgba(144, 202, 249, 0.08)'
                         : 'rgba(25, 118, 210, 0.08)',
                       color: theme.palette.primary.main,
                       fontWeight: 500,
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.875rem'
+                      },
                       '&:hover': {
                         backgroundColor: theme.palette.mode === 'dark' 
                           ? 'rgba(144, 202, 249, 0.16)'
@@ -150,18 +190,24 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
                   />
                 ))}
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2,
+                justifyContent: isXsScreen ? 'center' : 'flex-end',
+                width: isXsScreen ? '100%' : 'auto'
+              }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <IconButton size="small" disabled>
-                    <Visibility fontSize="small" />
+                  <IconButton size={isSmScreen ? "small" : "medium"} disabled>
+                    <Visibility fontSize={isSmScreen ? "small" : "medium"} />
                   </IconButton>
                   <Typography variant="caption" color="text.secondary">
                     {post.views || 0}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <IconButton size="small" disabled>
-                    <Favorite fontSize="small" />
+                  <IconButton size={isSmScreen ? "small" : "medium"} disabled>
+                    <Favorite fontSize={isSmScreen ? "small" : "medium"} />
                   </IconButton>
                   <Typography variant="caption" color="text.secondary">
                     {post.likes?.length || 0}
@@ -180,6 +226,7 @@ const Blog: React.FC = () => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isXsScreen = useMediaQuery('(max-width:320px)');
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -221,7 +268,14 @@ const Blog: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', px: { xs: 2, sm: 3 } }}>
+    <Box sx={{ 
+      maxWidth: 800, 
+      mx: 'auto', 
+      px: { 
+        xs: isXsScreen ? 1 : 2, 
+        sm: 3 
+      } 
+    }}>
       {blogs.map((post) => (
         <BlogCard key={post._id} post={post} />
       ))}
