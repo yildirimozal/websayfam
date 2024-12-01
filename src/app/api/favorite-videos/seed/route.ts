@@ -35,10 +35,10 @@ export async function GET() {
     await connectToDatabase();
     
     // Mevcut videoları temizle
-    await FavoriteVideo.deleteMany({});
+    //await FavoriteVideo.deleteMany({});
     
     // Örnek videoları ekle
-    await FavoriteVideo.insertMany(sampleVideos);
+    //await FavoriteVideo.insertMany(sampleVideos);
     
     return NextResponse.json({ message: 'Örnek veriler başarıyla eklendi' });
   } catch (error) {

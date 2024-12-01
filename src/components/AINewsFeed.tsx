@@ -109,7 +109,7 @@ const NewsDate = styled(Typography)(({ theme }) => ({
 
 const DISPLAY_COUNT = 3;
 const ROTATION_INTERVAL = 8000; // 8 saniye
-const FADE_DURATION = 1000; // 1 saniye
+const FADE_DURATION = 3000; // 3 saniye
 const DEFAULT_IMAGE = 'https://via.placeholder.com/300x200?text=AI+News';
 
 const AINewsFeed: React.FC = () => {
