@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Box, IconButton, useTheme, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, List, ListItem, ListItemText, Divider, useMediaQuery } from '@mui/material';
+import { Card, CardContent, Typography, Box, IconButton, useTheme, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, List, ListItem, ListItemText, Divider, useMediaQuery, Tooltip } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, Comment as CommentIcon } from '@mui/icons-material';
 import Image from 'next/image';
 import { ResizableBox } from 'react-resizable';
@@ -33,12 +33,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const [commentCount, setCommentCount] = useState(note.commentCount || 0);
 
   useEffect(() => {
-    if (session?.user && note._id) {
-      checkLikeStatus();
+    if (note._id) {
+      fetchLikeStatus();
     }
-  }, [session, note._id]);
+  }, [note._id]);
 
-  const checkLikeStatus = async () => {
+  const fetchLikeStatus = async () => {
     if (!note._id) return;
 
     try {
@@ -169,21 +169,15 @@ const NoteCard: React.FC<NoteCardProps> = ({
     });
   };
 
-  // Mobil ekranlar için minimum ve maksimum boyutları ayarla
-  const minConstraints = isXsScreen ? [120, 80] : isSmScreen ? [150, 100] : [200, 150];
-  const maxConstraints = isXsScreen ? [280, 400] : isSmScreen ? [320, 500] : [800, 800];
-  const defaultWidth = isXsScreen ? 150 : isSmScreen ? 180 : 200;
-  const defaultHeight = isXsScreen ? 100 : isSmScreen ? 120 : 150;
-
   return (
     <>
       <ResizableBox
-        width={note.size?.width || defaultWidth}
-        height={note.size?.height || defaultHeight}
+        width={note.size?.width || 200}
+        height={note.size?.height || 150}
         onResize={onResize}
         onResizeStop={onResizeStop}
-        minConstraints={minConstraints}
-        maxConstraints={maxConstraints}
+        minConstraints={[isXsScreen ? 120 : (isSmScreen ? 150 : 200), isXsScreen ? 80 : (isSmScreen ? 100 : 150)]}
+        maxConstraints={[isXsScreen ? 280 : (isSmScreen ? 320 : 800), isXsScreen ? 400 : (isSmScreen ? 500 : 800)]}
         resizeHandles={['se']}
         draggableOpts={{ enableUserSelectHack: false }}
       >
@@ -315,51 +309,64 @@ const NoteCard: React.FC<NoteCardProps> = ({
               backgroundColor: 'rgba(255,255,255,0.8)',
             }}
           >
-            <IconButton
-              size="small"
-              onClick={handleLike}
-              sx={{ 
-                color: isLiked ? 'red' : 'inherit',
-                '&:hover': { color: 'red' },
-                padding: isXsScreen ? '4px' : '8px',
-              }}
-            >
-              <Badge 
-                badgeContent={likeCount} 
-                color="primary"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: isXsScreen ? '0.6rem' : '0.75rem',
-                    minWidth: isXsScreen ? '14px' : '20px',
-                    height: isXsScreen ? '14px' : '20px',
-                  }
-                }}
-              >
-                {isLiked ? 
-                  <FavoriteIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} /> : 
-                  <FavoriteBorderIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
-                }
-              </Badge>
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleCommentClick}
-              sx={{ padding: isXsScreen ? '4px' : '8px' }}
-            >
-              <Badge 
-                badgeContent={commentCount} 
-                color="primary"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: isXsScreen ? '0.6rem' : '0.75rem',
-                    minWidth: isXsScreen ? '14px' : '20px',
-                    height: isXsScreen ? '14px' : '20px',
-                  }
-                }}
-              >
-                <CommentIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
-              </Badge>
-            </IconButton>
+            <Tooltip title={session ? '' : 'Beğenmek için giriş yapın'}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={handleLike}
+                  disabled={!session}
+                  sx={{ 
+                    color: isLiked ? 'red' : 'inherit',
+                    '&:hover': { color: session ? 'red' : 'inherit' },
+                    padding: isXsScreen ? '4px' : '8px',
+                    opacity: session ? 1 : 0.6
+                  }}
+                >
+                  <Badge 
+                    badgeContent={likeCount} 
+                    color="primary"
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        fontSize: isXsScreen ? '0.6rem' : '0.75rem',
+                        minWidth: isXsScreen ? '14px' : '20px',
+                        height: isXsScreen ? '14px' : '20px',
+                      }
+                    }}
+                  >
+                    {isLiked ? 
+                      <FavoriteIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} /> : 
+                      <FavoriteBorderIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
+                    }
+                  </Badge>
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title={session ? '' : 'Yorum yapmak için giriş yapın'}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={handleCommentClick}
+                  sx={{ 
+                    padding: isXsScreen ? '4px' : '8px',
+                    opacity: session ? 1 : 0.6
+                  }}
+                >
+                  <Badge 
+                    badgeContent={commentCount} 
+                    color="primary"
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        fontSize: isXsScreen ? '0.6rem' : '0.75rem',
+                        minWidth: isXsScreen ? '14px' : '20px',
+                        height: isXsScreen ? '14px' : '20px',
+                      }
+                    }}
+                  >
+                    <CommentIcon sx={{ fontSize: isXsScreen ? '0.9rem' : '1.2rem' }} />
+                  </Badge>
+                </IconButton>
+              </span>
+            </Tooltip>
           </Box>
         </Card>
       </ResizableBox>
@@ -425,20 +432,24 @@ const NoteCard: React.FC<NoteCardProps> = ({
       >
         <DialogTitle sx={{ 
           fontSize: isXsScreen ? '1.1rem' : '1.25rem',
-          p: isXsScreen ? 2 : 3
+          p: isXsScreen ? 2 : 3,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          Yorumlar
-          <Button
-            variant="contained"
-            size={isXsScreen ? "small" : "medium"}
-            sx={{ 
-              float: 'right',
-              fontSize: isXsScreen ? '0.75rem' : '0.875rem'
-            }}
-            onClick={handleAddCommentClick}
-          >
-            Yorum Ekle
-          </Button>
+          <span>Yorumlar</span>
+          {session && (
+            <Button
+              variant="contained"
+              size={isXsScreen ? "small" : "medium"}
+              sx={{ 
+                fontSize: isXsScreen ? '0.75rem' : '0.875rem'
+              }}
+              onClick={handleAddCommentClick}
+            >
+              Yorum Ekle
+            </Button>
+          )}
         </DialogTitle>
         <DialogContent sx={{ p: isXsScreen ? 1 : 2 }}>
           <List>

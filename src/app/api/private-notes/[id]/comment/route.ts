@@ -4,6 +4,34 @@ import { PrivateNote, IPrivateNote } from '@/models/PrivateNote';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/config';
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectToDatabase();
+    const note = await PrivateNote.findById(params.id).select('comments').lean().exec() as IPrivateNote;
+    
+    if (!note) {
+      return NextResponse.json(
+        { error: 'Not bulunamadı' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      comments: note.comments,
+      commentCount: note.comments.length
+    });
+  } catch (error) {
+    console.error('Yorumlar getirilirken hata:', error);
+    return NextResponse.json(
+      { error: 'Yorumlar getirilirken bir hata oluştu' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -12,15 +40,15 @@ export async function POST(
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Oturum açmanız gerekiyor' },
+        { error: 'Bu işlem için giriş yapmanız gerekiyor' },
         { status: 401 }
       );
     }
 
     const { content } = await request.json();
-    if (!content) {
+    if (!content?.trim()) {
       return NextResponse.json(
-        { error: 'Yorum içeriği gerekli' },
+        { error: 'Yorum içeriği boş olamaz' },
         { status: 400 }
       );
     }
@@ -35,14 +63,10 @@ export async function POST(
       );
     }
 
-    if (!note.comments) {
-      note.comments = [];
-    }
-
     const comment = {
       userId: session.user.id,
       userName: session.user.name || 'Anonim',
-      userImage: session.user.image || null,
+      userImage: session.user.image,
       content,
       createdAt: new Date()
     };
@@ -55,42 +79,9 @@ export async function POST(
       commentCount: note.comments.length
     });
   } catch (error) {
-    console.error('Yorum ekleme sırasında hata:', error);
+    console.error('Yorum eklenirken hata:', error);
     return NextResponse.json(
       { error: 'Yorum eklenirken bir hata oluştu' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectToDatabase();
-    const note = await PrivateNote.findById(params.id).lean().exec() as IPrivateNote;
-    
-    if (!note) {
-      return NextResponse.json(
-        { error: 'Not bulunamadı' },
-        { status: 404 }
-      );
-    }
-
-    // Yorumları ve yorum sayısını herkes görebilir
-    return NextResponse.json({
-      comments: note.comments.map(comment => ({
-        ...comment,
-        userName: comment.userName || 'Anonim',
-        createdAt: comment.createdAt
-      })),
-      commentCount: note.comments.length
-    });
-  } catch (error) {
-    console.error('Yorumları getirme sırasında hata:', error);
-    return NextResponse.json(
-      { error: 'Yorumlar getirilirken bir hata oluştu' },
       { status: 500 }
     );
   }
