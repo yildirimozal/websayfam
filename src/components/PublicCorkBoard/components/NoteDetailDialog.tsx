@@ -62,7 +62,6 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({
       }}>
         <Box sx={{ 
           display: 'flex', 
-          alignItems: 'center',
           flexDirection: isXsScreen ? 'column' : 'row',
           alignItems: isXsScreen ? 'flex-start' : 'center'
         }}>
@@ -139,7 +138,7 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({
             backgroundColor: '#f5f5f5'
           }}>
             <img
-              src={note.content}
+              src={note.url}
               alt={`${note.author?.name}'in resmi`}
               style={{ 
                 maxWidth: '100%',
@@ -148,7 +147,7 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({
                 display: 'block'
               }}
               onError={(e) => {
-                console.error('Resim yüklenemedi:', note.content);
+                console.error('Resim yüklenemedi:', note.url);
                 e.currentTarget.style.display = 'none';
               }}
             />
