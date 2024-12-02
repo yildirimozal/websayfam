@@ -145,9 +145,9 @@ const PublicCorkBoard = () => {
         padding: '16px',
         border: '12px solid #BC8F8F',
         position: 'relative',
-        touchAction: 'none',
         userSelect: 'none',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch'
       }}
     >
       <Timer remainingTime={remainingTime} totalTime={TIMER_DURATION} />
