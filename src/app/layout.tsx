@@ -17,8 +17,47 @@ const kalam = Kalam({
 });
 
 export const metadata: Metadata = {
-  title: "Ozal Yildirim",
-  description: "Akademik çalışmalar ve yapay zeka güncellemeleri",
+  metadataBase: new URL('https://ozalyildirim.com'),
+  title: {
+    default: "Dr. Özal Yıldırım | Akademisyen ve Yapay Zeka Araştırmacısı",
+    template: "%s | Dr. Özal Yıldırım"
+  },
+  description: "Yapay zeka, makine öğrenmesi ve derin öğrenme alanlarında akademik çalışmalar, araştırmalar ve güncel teknoloji paylaşımları",
+  keywords: ["yapay zeka", "makine öğrenmesi", "derin öğrenme", "akademik araştırma", "teknoloji", "bilim", "eğitim"],
+  authors: [{ name: "Dr. Özal Yıldırım" }],
+  creator: "Dr. Özal Yıldırım",
+  publisher: "Dr. Özal Yıldırım",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "Dr. Özal Yıldırım | Akademisyen ve Yapay Zeka Araştırmacısı",
+    description: "Yapay zeka, makine öğrenmesi ve derin öğrenme alanlarında akademik çalışmalar ve araştırmalar",
+    url: "https://ozalyildirim.com",
+    siteName: "Dr. Özal Yıldırım",
+    locale: "tr_TR",
+    type: "website",
+    images: [
+      {
+        url: "/profile.jpg",
+        width: 800,
+        height: 600,
+        alt: "Dr. Özal Yıldırım",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dr. Özal Yıldırım | Akademisyen ve Yapay Zeka Araştırmacısı",
+    description: "Yapay zeka, makine öğrenmesi ve derin öğrenme alanlarında akademik çalışmalar ve araştırmalar",
+    creator: "@ozalyildirim",
+    images: ["/profile.jpg"],
+  },
+  alternates: {
+    canonical: "https://ozalyildirim.com",
+  },
 };
 
 export const viewport: Viewport = {
