@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Kalam } from 'next/font/google';
+import Script from 'next/script';
 import Providers from '../components/Providers';
 import Footer from '../components/Footer';
 import "./globals.css";
@@ -43,6 +44,20 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Kalam:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-4D054WPW7D"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-4D054WPW7D');
+          `}
+        </Script>
       </head>
       <body className={kalam.className}>
         <Providers>

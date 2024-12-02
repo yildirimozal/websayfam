@@ -77,6 +77,37 @@ const PublicCorkBoard = () => {
       >
         <Timer remainingTime={remainingTime} totalTime={TIMER_DURATION} />
 
+        {session && (isAdmin || canAddNote) && (
+          <Tooltip title={canAddNote ? "Yeni Not Ekle" : "Bu periyotta daha fazla not ekleyemezsiniz"}>
+            <Box sx={{ 
+              position: 'absolute',
+              top: 1,
+              left: 4,
+              zIndex: 1000,
+              opacity: 0.9,
+              transition: 'opacity 0.2s',
+              '&:hover': {
+                opacity: 1
+              }
+            }}>
+              <Fab
+                color="primary"
+                onClick={() => setIsAddDialogOpen(true)}
+                disabled={!canAddNote && !isAdmin}
+                size="medium"
+                sx={{
+                  backgroundColor: theme.palette.primary.main,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.dark,
+                  }
+                }}
+              >
+                <AddIcon />
+              </Fab>
+            </Box>
+          </Tooltip>
+        )}
+
         {notes.map((note) => (
           <NoteCard
             key={note.id}
@@ -109,20 +140,6 @@ const PublicCorkBoard = () => {
             onClick={() => setSelectedNote(note)}
           />
         ))}
-
-        {session && (isAdmin || canAddNote) && (
-          <Tooltip title={canAddNote ? "Yeni Not Ekle" : "Bu periyotta daha fazla not ekleyemezsiniz"}>
-            <Box sx={{ position: 'fixed', bottom: 500, right: 460, zIndex: 1000 }}>
-              <Fab
-                color="primary"
-                onClick={() => setIsAddDialogOpen(true)}
-                disabled={!canAddNote && !isAdmin}
-              >
-                <AddIcon />
-              </Fab>
-            </Box>
-          </Tooltip>
-        )}
 
         <AddNoteDialog
           open={isAddDialogOpen}
