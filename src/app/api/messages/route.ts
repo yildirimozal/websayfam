@@ -8,7 +8,10 @@ import Message from '@/models/Message';
 export async function GET(request: Request) {
   try {
     await connectToDatabase();
-    const messages = await Message.find().sort({ createdAt: -1 }).limit(50);
+    const messages = await Message.find()
+      .populate('quotedMessage', 'content author') // Alıntılanan mesajları populate et
+      .sort({ createdAt: -1 })
+      .limit(50);
     return NextResponse.json(messages);
   } catch (error) {
     console.error('Mesajlar yüklenirken hata:', error);
@@ -39,7 +42,11 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(message, { status: 201 });
+    // Yeni mesajı populate edilmiş halde döndür
+    const populatedMessage = await Message.findById(message._id)
+      .populate('quotedMessage', 'content author');
+
+    return NextResponse.json(populatedMessage, { status: 201 });
   } catch (error) {
     console.error('Mesaj oluşturma hatası:', error);
     return NextResponse.json(

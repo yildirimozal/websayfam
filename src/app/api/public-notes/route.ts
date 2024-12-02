@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/config';
 
 // 12 saat = 12 * 60 * 60 * 1000 milisaniye
-const TIMER_DURATION = 12 * 60 * 60 * 1000;
+const TIMER_DURATION = 24 * 60 * 60 * 1000;
 
 interface UserNote {
   email: string;
@@ -54,7 +54,7 @@ async function canUserAddNote(email: string): Promise<boolean> {
   }
 
   const userNote = timer.userNotes.find((un: UserNote) => un.email === email);
-  return !userNote || userNote.count === 0;
+  return !userNote || userNote.count < 2; // 2 nota kadar izin ver
 }
 
 async function incrementUserNoteCount(email: string) {
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     const canAdd = await canUserAddNote(session.user.email);
     if (!canAdd) {
       return NextResponse.json(
-        { error: 'Bu periyotta zaten bir not eklediniz. Yeni not eklemek için sürenin dolmasını bekleyin.' },
+        { error: 'Bu periyotta maksimum not sayısına ulaştınız. Yeni not eklemek için sürenin dolmasını bekleyin.' },
         { status: 403 }
       );
     }

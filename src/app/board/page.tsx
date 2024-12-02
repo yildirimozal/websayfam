@@ -27,11 +27,9 @@ const BoardPage = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
             <Box sx={{ 
-              height: '80vh',
               backgroundColor: theme.palette.background.paper,
               borderRadius: 2,
               boxShadow: theme.shadows[1],
-              overflow: 'hidden',
               position: 'relative'
             }}>
               <PublicCorkBoard />

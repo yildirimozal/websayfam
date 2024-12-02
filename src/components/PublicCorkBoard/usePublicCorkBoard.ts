@@ -4,70 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Note } from './types';
 
-export const generateTempId = () => Math.random().toString(36).substr(2, 9);
-
-// 12 saat = 12 * 60 * 60 * 1000 milisaniye
-const TIMER_DURATION = 12 * 60 * 60 * 1000;
-
-// Maksimum not boyutları
-const MAX_NOTE_SIZE = {
-  width: 250,
-  height: 250
-};
-
 export const usePublicCorkBoard = () => {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remainingTime, setRemainingTime] = useState(0);
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [canAddNote, setCanAddNote] = useState(true);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  const normalizeNote = useCallback((note: any): Note => {
-    return {
-      id: note.id || note._id || generateTempId(),
-      type: note.type || 'note',
-      content: note.content || '',
-      url: note.url,
-      position: note.position && typeof note.position.x === 'number' && typeof note.position.y === 'number' 
-        ? note.position 
-        : { x: 50, y: 50 },
-      size: note.size && typeof note.size.width === 'number' && typeof note.size.height === 'number'
-        ? {
-            width: Math.min(note.size.width, MAX_NOTE_SIZE.width),
-            height: Math.min(note.size.height, MAX_NOTE_SIZE.height)
-          }
-        : { width: 200, height: 200 },
-      rotation: typeof note.rotation === 'number' ? note.rotation : 0,
-      color: note.color || '#fff9c4',
-      fontFamily: note.fontFamily || 'Roboto',
-      author: {
-        name: note.author?.name || 'Anonim',
-        email: note.author?.email || 'anonymous@example.com',
-        image: note.author?.image || '/default-avatar.png'
-      },
-      likes: Array.isArray(note.likes) ? note.likes : [],
-      comments: Array.isArray(note.comments) ? note.comments.map((comment: any) => ({
-        id: comment.id || generateTempId(),
-        userId: comment.userId || 'anonymous',
-        content: comment.content || '',
-        createdAt: comment.createdAt || new Date().toISOString(),
-        author: {
-          id: comment.author?.id || 'anonymous',
-          name: comment.author?.name || 'Anonim',
-          email: comment.author?.email,
-          image: comment.author?.image || '/default-avatar.png'
-        }
-      })) : [],
-      createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
-      updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date()
-    };
-  }, []);
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -77,35 +23,35 @@ export const usePublicCorkBoard = () => {
       }
       const data = await response.json();
       
-      // Server'dan gelen notları ve sayaç bilgisini işle
-      const normalizedNotes = Array.isArray(data.notes) ? data.notes.map(normalizeNote) : [];
+      const normalizedNotes = Array.isArray(data.notes) ? data.notes : [];
       setNotes(normalizedNotes);
+      
+      // Seçili not varsa, onu da güncelle
+      if (selectedNote) {
+        const updatedSelectedNote = normalizedNotes.find((note: Note) => note.id === selectedNote.id);
+        if (updatedSelectedNote) {
+          setSelectedNote(updatedSelectedNote);
+        }
+      }
       
       if (data.timer) {
         setTimerStartTime(new Date(data.timer.startTime));
         setRemainingTime(data.timer.remainingTime);
         
-        // Eğer notlar sıfırlanmışsa ve client'ta hala notlar varsa
         if (data.timer.wasReset && normalizedNotes.length === 0) {
           setNotes([]);
-          setCanAddNote(true); // Timer sıfırlandığında not ekleme hakkını geri ver
+          setCanAddNote(true);
         }
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu';
-      setError(`Notları yüklerken hata: ${errorMessage}`);
       console.error('Notları yükleme hatası:', err);
+      setError('Notlar yüklenirken bir hata oluştu');
     }
-  }, [normalizeNote]);
+  }, [selectedNote]);
 
   useEffect(() => {
-    // İlk yükleme için hemen fetch yap
     fetchNotes();
-    setIsInitialLoad(false);
-    
-    // İlk yüklemeden sonra 2 saniyelik interval ile güncelle
     const interval = setInterval(fetchNotes, 2000);
-    
     return () => clearInterval(interval);
   }, [fetchNotes]);
 
@@ -128,81 +74,47 @@ export const usePublicCorkBoard = () => {
       return;
     }
 
-    if (!session.user.name || !session.user.email) {
-      setError('Kullanıcı bilgileri eksik');
-      return;
-    }
-
     try {
-      const noteData = {
-        content: content,
-        type,
-        position: { x: 50, y: 50 },
-        size: { 
-          width: Math.min(type === 'image' ? 250 : 200, MAX_NOTE_SIZE.width),
-          height: Math.min(type === 'image' ? 250 : 200, MAX_NOTE_SIZE.height)
-        },
-        rotation: Math.random() * 10 - 5,
-        color,
-        fontFamily,
-        author: {
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image || '/default-avatar.png'
-        }
-      };
-
-      console.log('Creating note with data:', noteData);
-
       const response = await fetch('/api/public-notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(noteData)
+        body: JSON.stringify({
+          content,
+          type,
+          color,
+          fontFamily,
+          author: {
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image
+          }
+        })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Not eklenemedi');
+        throw new Error('Not eklenemedi');
       }
 
-      const data = await response.json();
-      
-      // Server'dan gelen notu ve sayaç bilgisini işle
-      if (data.note) {
-        setNotes(prev => [...prev, normalizeNote(data.note)]);
-        // Admin değilse not ekleme hakkını kullandır
-        if (session.user.email !== 'ozalyildirim@firat.edu.tr') {
-          setCanAddNote(false);
-        }
-      }
-      
-      if (data.timer) {
-        setTimerStartTime(new Date(data.timer.startTime));
-        setRemainingTime(data.timer.remainingTime);
-      }
+      await fetchNotes();
     } catch (err) {
       console.error('Not ekleme hatası:', err);
-      if (err instanceof Error && err.message.includes('Bu periyotta zaten bir not eklediniz')) {
-        setCanAddNote(false);
-      }
-      setError(err instanceof Error ? err.message : 'Not eklenirken bir hata oluştu');
+      setError('Not eklenirken bir hata oluştu');
     }
   };
 
   const handleDeleteNote = async (noteId: string): Promise<void> => {
-    if (!session?.user) {
-      setError('Not silmek için giriş yapmalısınız');
-      return;
-    }
-
     try {
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'DELETE'
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Not silinemedi');
+        throw new Error('Not silinemedi');
+      }
+
+      // Silinen not seçili notsa, seçimi kaldır
+      if (selectedNote?.id === noteId) {
+        setSelectedNote(null);
       }
 
       await fetchNotes();
@@ -213,11 +125,6 @@ export const usePublicCorkBoard = () => {
   };
 
   const handleUpdateNote = async (noteId: string, content: string, color: string, fontFamily: string): Promise<void> => {
-    if (!session?.user) {
-      setError('Not güncellemek için giriş yapmalısınız');
-      return;
-    }
-
     try {
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
@@ -226,8 +133,7 @@ export const usePublicCorkBoard = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Not güncellenemedi');
+        throw new Error('Not güncellenemedi');
       }
 
       await fetchNotes();
@@ -239,14 +145,6 @@ export const usePublicCorkBoard = () => {
 
   const handleUpdateNotePosition = async (noteId: string, position: { x: number; y: number }): Promise<void> => {
     try {
-      setNotes(prevNotes => 
-        prevNotes.map(note => 
-          note.id === noteId 
-            ? { ...note, position }
-            : note
-        )
-      );
-
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -254,38 +152,26 @@ export const usePublicCorkBoard = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Not konumu güncellenemedi');
+        throw new Error('Not konumu güncellenemedi');
       }
+
+      await fetchNotes();
     } catch (err) {
       console.error('Not konumu güncelleme hatası:', err);
       setError('Not konumu güncellenirken bir hata oluştu');
-      await fetchNotes();
     }
   };
 
   const handleUpdateNoteSize = async (noteId: string, size: { width: number; height: number }): Promise<void> => {
-    if (!session?.user) {
-      setError('Not boyutunu güncellemek için giriş yapmalısınız');
-      return;
-    }
-
     try {
-      // Boyutu maksimum değerlerle sınırla
-      const limitedSize = {
-        width: Math.min(size.width, MAX_NOTE_SIZE.width),
-        height: Math.min(size.height, MAX_NOTE_SIZE.height)
-      };
-
       const response = await fetch(`/api/public-notes/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ size: limitedSize })
+        body: JSON.stringify({ size })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Not boyutu güncellenemedi');
+        throw new Error('Not boyutu güncellenemedi');
       }
 
       await fetchNotes();
@@ -302,8 +188,7 @@ export const usePublicCorkBoard = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Beğeni işlemi başarısız');
+        throw new Error('Beğeni işlemi başarısız');
       }
 
       await fetchNotes();
@@ -314,16 +199,6 @@ export const usePublicCorkBoard = () => {
   };
 
   const handleCommentAdd = async (noteId: string, content: string): Promise<void> => {
-    if (!session?.user) {
-      setError('Yorum yapmak için giriş yapmalısınız');
-      return;
-    }
-
-    if (!session.user.name || !session.user.email) {
-      setError('Kullanıcı bilgileri eksik');
-      return;
-    }
-
     try {
       const response = await fetch(`/api/public-notes/${noteId}/comment`, {
         method: 'POST',
@@ -332,8 +207,7 @@ export const usePublicCorkBoard = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Yorum eklenemedi');
+        throw new Error('Yorum eklenemedi');
       }
 
       await fetchNotes();
@@ -344,19 +218,13 @@ export const usePublicCorkBoard = () => {
   };
 
   const handleCommentDelete = async (noteId: string, commentId: string): Promise<void> => {
-    if (!session?.user) {
-      setError('Yorum silmek için giriş yapmalısınız');
-      return;
-    }
-
     try {
       const response = await fetch(`/api/public-notes/${noteId}/comment/${commentId}`, {
         method: 'DELETE'
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Yorum silinemedi');
+        throw new Error('Yorum silinemedi');
       }
 
       await fetchNotes();
@@ -366,14 +234,17 @@ export const usePublicCorkBoard = () => {
     }
   };
 
+  // Debug için log ekleyelim
+  useEffect(() => {
+    console.log('Selected Note:', selectedNote);
+  }, [selectedNote]);
+
   return {
     session,
     notes,
     setNotes,
     activeNote,
     setActiveNote,
-    dragOffset,
-    setDragOffset,
     isResizing,
     setIsResizing,
     error,
@@ -391,7 +262,7 @@ export const usePublicCorkBoard = () => {
     handleCommentDelete,
     remainingTime,
     timerStartTime,
-    TIMER_DURATION,
+    TIMER_DURATION: 12 * 60 * 60 * 1000,
     selectedNote,
     setSelectedNote
   };

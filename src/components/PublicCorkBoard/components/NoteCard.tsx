@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardActions, IconButton, Typography, Box, Tooltip, Avatar, Badge } from '@mui/material';
-import { Rnd } from 'react-rnd';
+import { Rnd, DraggableData, Position, ResizableDelta, RndResizeCallback } from 'react-rnd';
 import {
   Delete as DeleteIcon,
   Edit as EditIcon,
@@ -23,13 +23,13 @@ interface NoteCardProps {
   canMove: boolean;
   isLiked: boolean;
   onDragStart: () => void;
-  onResize: (e: any, direction: any, ref: any, delta: any, position: any) => void;
+  onResize: RndResizeCallback;
   onResizeStop: () => void;
   onDelete: () => void;
   onLikeToggle: () => void;
   onCommentClick: () => void;
   onEdit: () => void;
-  onDragStop: (e: any, data: { x: number; y: number }) => void;
+  onDragStop: (e: any, data: DraggableData) => void;
   onClick?: () => void;
 }
 
@@ -37,6 +37,10 @@ const MAX_NOTE_SIZE = {
   width: 250,
   height: 250
 };
+
+const BASE_Z_INDEX = 1;
+const ACTIVE_Z_INDEX = 1000;
+const LIKES_Z_INDEX_MULTIPLIER = 2;
 
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
@@ -57,6 +61,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
   const { data: session } = useSession();
   
+  // Beğeni sayısına göre z-index hesapla
+  const calculateZIndex = () => {
+    if (isActive) return ACTIVE_Z_INDEX;
+    return BASE_Z_INDEX + (note.likes.length * LIKES_Z_INDEX_MULTIPLIER);
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     // Eğer tıklama butonlardan geldiyse detay görünümünü açma
     if ((e.target as HTMLElement).closest('button')) {
@@ -137,7 +147,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
       maxWidth={MAX_NOTE_SIZE.width}
       maxHeight={MAX_NOTE_SIZE.height}
       style={{
-        zIndex: isActive ? 1000 : 1
+        zIndex: calculateZIndex()
       }}
     >
       <Card

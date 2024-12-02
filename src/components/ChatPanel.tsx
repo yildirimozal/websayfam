@@ -42,7 +42,7 @@ interface Message {
       email: string;
       image?: string;
     };
-  };
+  } | null;
   createdAt: string;
   reactions: Array<{
     emoji: string;
@@ -178,6 +178,12 @@ const ChatPanel: React.FC = () => {
     }
   };
 
+  const isQuotedMessageDeleted = (quotedMessage: Message['quotedMessage']) => {
+    if (!quotedMessage) return true;
+    const originalMessage = messages.find(m => m._id === quotedMessage._id);
+    return !originalMessage;
+  };
+
   return (
     <Box sx={{ 
       height: '100%', 
@@ -306,12 +312,20 @@ const ChatPanel: React.FC = () => {
                   opacity: 0.7,
                   mb: 0.5,
                 }}>
-                  <Typography variant="caption" color="primary" sx={{ fontWeight: 600 }}>
-                    @{message.quotedMessage.author?.name || 'Silinmiş Mesaj'}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {message.quotedMessage.content || 'Bu mesaj silinmiş'}
-                  </Typography>
+                  {isQuotedMessageDeleted(message.quotedMessage) ? (
+                    <Typography variant="body2" color="textSecondary">
+                      Bu mesaj silinmiş
+                    </Typography>
+                  ) : (
+                    <>
+                      <Typography variant="caption" color="primary" sx={{ fontWeight: 600 }}>
+                        @{message.quotedMessage.author.name}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {message.quotedMessage.content}
+                      </Typography>
+                    </>
+                  )}
                 </Box>
               )}
 
