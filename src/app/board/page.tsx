@@ -44,7 +44,9 @@ const BoardPage = () => {
                 boxShadow: theme.shadows[1],
                 overflow: 'hidden',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                position: 'sticky',
+                top: 24
               }}>
                 <ChatPanel />
               </Box>
@@ -100,13 +102,15 @@ const BoardPage = () => {
                 maxWidth: 360,
                 backgroundColor: theme.palette.background.paper,
                 height: '100%',
+                overflow: 'hidden'
               }
             }}
           >
             <Box sx={{ 
               height: '100%',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              overflow: 'hidden'
             }}>
               <ChatPanel />
             </Box>

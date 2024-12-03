@@ -1,20 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { OnlineUser } from '@/models/OnlineUser';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/config';
+import { authOptions } from '../auth/config';
 
 export async function GET() {
   try {
     await connectToDatabase();
     
-    // 5 dakika içinde aktif olan kullanıcıları getir
+    // 5 dakika içinde aktif olan ve misafir olmayan kullanıcıları getir
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const onlineUsers = await OnlineUser.find({
-      lastSeen: { $gte: fiveMinutesAgo }
-    });
+      lastSeen: { $gte: fiveMinutesAgo },
+      name: { $ne: 'Misafir' }
+    }).select('name email image lastSeen -_id').lean();
 
-    return NextResponse.json({ count: onlineUsers.length });
+    return NextResponse.json({ 
+      count: onlineUsers.length,
+      users: onlineUsers.map(user => ({
+        name: user.name,
+        email: user.email,
+        image: user.image || '',
+        lastSeen: user.lastSeen.toISOString()
+      }))
+    });
   } catch (error) {
     console.error('Online kullanıcı sayısı alınırken hata:', error);
     return NextResponse.json(
@@ -27,7 +36,7 @@ export async function GET() {
 export async function POST() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.email || !session?.user?.name) {
       return NextResponse.json(
         { error: 'Oturum bulunamadı' },
         { status: 401 }
@@ -37,23 +46,34 @@ export async function POST() {
     await connectToDatabase();
     
     // Kullanıcının son görülme zamanını güncelle veya yeni kayıt oluştur
-    await OnlineUser.findOneAndUpdate(
-      { userId: session.user.id },
+    const updatedUser = await OnlineUser.findOneAndUpdate(
+      { email: session.user.email },
       {
-        userId: session.user.id,
-        userName: session.user.name || 'Anonim',
+        userId: session.user.email,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image || '',
         lastSeen: new Date()
       },
-      { upsert: true }
-    );
+      { upsert: true, new: true }
+    ).lean();
 
-    // Güncel online kullanıcı sayısını döndür
+    // Güncel online kullanıcıları döndür (misafirler hariç)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const onlineUsers = await OnlineUser.find({
-      lastSeen: { $gte: fiveMinutesAgo }
-    });
+      lastSeen: { $gte: fiveMinutesAgo },
+      name: { $ne: 'Misafir' }
+    }).select('name email image lastSeen -_id').lean();
 
-    return NextResponse.json({ count: onlineUsers.length });
+    return NextResponse.json({ 
+      count: onlineUsers.length,
+      users: onlineUsers.map(user => ({
+        name: user.name,
+        email: user.email,
+        image: user.image || '',
+        lastSeen: user.lastSeen.toISOString()
+      }))
+    });
   } catch (error) {
     console.error('Online durumu güncellenirken hata:', error);
     return NextResponse.json(

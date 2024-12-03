@@ -1,31 +1,23 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface IOnlineUser {
-  userId: string;
-  userName: string;
-  lastSeen: Date;
+const OnlineUserSchema = new mongoose.Schema({
+  userId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  image: { type: String },
+  lastSeen: { type: Date, default: Date.now }
+}, {
+  strict: true,
+  timestamps: true
+});
+
+// Mevcut koleksiyonu temizle
+try {
+  if (mongoose.models.OnlineUser) {
+    delete mongoose.models.OnlineUser;
+  }
+} catch (error) {
+  console.error('Model temizleme hatası:', error);
 }
 
-const onlineUserSchema = new Schema<IOnlineUser>({
-  userId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  userName: {
-    type: String,
-    required: true
-  },
-  lastSeen: {
-    type: Date,
-    required: true,
-    default: Date.now
-  }
-});
-
-// 5 dakika içinde aktivite göstermeyen kullanıcıları offline olarak kabul et
-onlineUserSchema.index({ lastSeen: 1 }, { 
-  expireAfterSeconds: 300 
-});
-
-export const OnlineUser = mongoose.models.OnlineUser || mongoose.model<IOnlineUser>('OnlineUser', onlineUserSchema);
+export const OnlineUser = mongoose.models.OnlineUser || mongoose.model('OnlineUser', OnlineUserSchema);
